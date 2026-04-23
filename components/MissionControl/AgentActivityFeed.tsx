@@ -140,23 +140,23 @@ export function AgentActivityFeed({ liveSteps, isRunning }: Props) {
 
         {history.length > 0 && (
           <>
-            <div style={{ fontSize: 11, color: 'var(--tulip-gray)', textTransform: 'uppercase', letterSpacing: '0.05em', paddingTop: 8, paddingBottom: 4 }}>Recent Runs</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tulip-gray)', textTransform: 'uppercase', letterSpacing: '0.06em', paddingTop: 12, paddingBottom: 8 }}>Recent Runs</div>
             {history.map(run => (
-              <div key={run.id} style={{ padding: '8px 10px', border: '1px solid var(--tulip-border)', borderRadius: 6, marginBottom: 4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: agentColor(run.agent_name) }}>{agentLabel(run.agent_name)}</span>
+              <div key={run.id} style={{ padding: '12px 14px', border: '1px solid var(--tulip-border)', borderRadius: 8, marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: agentColor(run.agent_name) }}>{agentLabel(run.agent_name)}</span>
                   <span style={{
-                    fontSize: 10, padding: '1px 6px', borderRadius: 9999,
+                    fontSize: 10, padding: '2px 8px', borderRadius: 9999,
                     backgroundColor: run.status === 'completed' ? '#dcfce7' : run.status === 'failed' ? '#fee2e2' : '#fef9c3',
                     color: run.status === 'completed' ? '#166534' : run.status === 'failed' ? '#991b1b' : '#854d0e',
-                    fontWeight: 600
+                    fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase'
                   }}>
                     {run.status}
                   </span>
                 </div>
-                {run.accounts?.name && <div style={{ fontSize: 11, color: 'var(--tulip-gray)' }}>{run.accounts.name}</div>}
-                {run.output_summary && <div style={{ fontSize: 12, color: '#334155', marginTop: 2 }}>{formatOutputSummary(run.output_summary)}</div>}
-                <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 3 }}>{new Date(run.started_at).toLocaleString()}</div>
+                {run.accounts?.name && <div style={{ fontSize: 11, color: 'var(--tulip-gray)', marginBottom: 2 }}>{run.accounts.name}</div>}
+                {run.output_summary && <div style={{ fontSize: 12, color: '#334155', lineHeight: 1.45, marginTop: 2 }}>{formatOutputSummary(run.output_summary)}</div>}
+                <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 6 }}>{new Date(run.started_at).toLocaleString()}</div>
               </div>
             ))}
           </>

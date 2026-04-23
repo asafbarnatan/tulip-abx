@@ -179,11 +179,26 @@ export function LinkedInPanel({ initialConnected, accountId }: Props) {
   const [dragOverId, setDragOverId] = useState<string | null>(null)
 
   const persistOrder = async (ordered: Campaign[]) => {
-    await fetch('/api/linkedin/campaigns/reorder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: ordered.map(c => c.id) }),
-    })
+    // Surface reorder failures explicitly — earlier version swallowed 500s, which
+    // hid the "display_order column missing" case for a long time. If the POST
+    // fails, roll the UI back by refetching the server's actual order so the user
+    // sees reality instead of a phantom reordered state that won't survive refresh.
+    try {
+      const res = await fetch('/api/linkedin/campaigns/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: ordered.map(c => c.id) }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        console.error('[LinkedInPanel] reorder failed:', res.status, body.error ?? body)
+        // If the server couldn't save the order, rebase the UI on real data.
+        loadCampaigns()
+      }
+    } catch (err) {
+      console.error('[LinkedInPanel] reorder threw:', err)
+      loadCampaigns()
+    }
   }
 
   const handleDragStart = (e: React.DragEvent, id: string) => {

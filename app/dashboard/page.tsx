@@ -70,7 +70,9 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Tier 1 */}
+      {/* Tier grids use `auto-fit` with a 400px min so cards flow naturally —
+          a tier with 3 accounts lays out as 1 row of 3, a tier with 2 stretches
+          each card to half-width, and no empty grid cells stranded in row 2. */}
       {tier1.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-3">
@@ -79,7 +81,7 @@ export default async function DashboardPage() {
             </span>
             <span className="text-sm text-gray-500 font-medium">Strategic Accounts — highest priority, full ABX motion</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))' }}>
             {tier1.map(account => (
               <AccountCard key={account.id} account={account} />
             ))}
@@ -87,7 +89,6 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      {/* Tier 2 */}
       {tier2.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-3">
@@ -96,7 +97,7 @@ export default async function DashboardPage() {
             </span>
             <span className="text-sm text-gray-500 font-medium">Growth Accounts — targeted plays, scalable motions</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))' }}>
             {tier2.map(account => (
               <AccountCard key={account.id} account={account} />
             ))}
@@ -104,7 +105,6 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      {/* Tier 3 */}
       {tier3.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-3">
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
             </span>
             <span className="text-sm text-gray-500 font-medium">Nurture Accounts — low-touch, programmatic</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))' }}>
             {tier3.map(account => (
               <AccountCard key={account.id} account={account} />
             ))}

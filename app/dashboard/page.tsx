@@ -34,7 +34,7 @@ export default async function DashboardPage() {
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold" style={{ color: '#00263E' }}>
+        <h1 className="font-extrabold" style={{ fontSize: 32, lineHeight: 1.05, letterSpacing: '-0.01em', color: '#00263E' }}>
           Account Intelligence Dashboard
         </h1>
         <p className="text-gray-500 mt-1 text-sm">

@@ -17,7 +17,7 @@ export default function AgentsPage() {
           >
             Tulip · Agent Catalog
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'white', margin: 0, lineHeight: 1.1 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: 'white', margin: 0, lineHeight: 1.05, letterSpacing: '-0.01em' }}>
             Meet the Agents
           </h1>
           <p style={{ fontSize: 13, color: 'var(--tulip-teal-light)', marginTop: 8, maxWidth: 720, lineHeight: 1.55 }}>

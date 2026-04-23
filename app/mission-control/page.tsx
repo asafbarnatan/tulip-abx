@@ -173,7 +173,7 @@ export default function MissionControlPage() {
               <div style={{ fontSize: 11, color: 'var(--tulip-teal-light)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 4 }}>
                 Tulip · Mission Control
               </div>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: 'white', margin: 0, lineHeight: 1.1 }}>
+              <h1 style={{ fontSize: 32, fontWeight: 800, color: 'white', margin: 0, lineHeight: 1.05, letterSpacing: '-0.01em' }}>
                 Account-Based Experience
               </h1>
               {(accounts.length > 0 || runCount != null) && (

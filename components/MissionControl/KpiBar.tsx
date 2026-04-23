@@ -379,13 +379,14 @@ function Tile({ def, value, history }: { def: TileDef; value: number; history?: 
 function GroupHeader({ title, caption }: { title: string; caption?: string }) {
   return (
     <div style={{ marginBottom: 8, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-      <div style={{
+      <h2 style={{
         fontSize: 11, color: '#00263E',
         textTransform: 'uppercase', letterSpacing: '0.08em',
         fontWeight: 800,
+        margin: 0,
       }}>
         {title}
-      </div>
+      </h2>
       {caption && (
         <div style={{ fontSize: 11, color: 'var(--tulip-gray)', fontWeight: 400 }}>
           {caption}

@@ -66,8 +66,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Paste CSV content in the "csv" field.' }, { status: 400 })
   }
 
+  // LinkedIn Campaign Manager exports CSVs as UTF-16 LE with a BOM, and its
+  // "Ad Performance Report" is tab-separated, not comma-separated. The first
+  // 4 lines are metadata ("Ad Performance Report", "Report Start: …", …) with
+  // no tabs, so we have to scan further to detect the real delimiter. If ANY
+  // line in the first 20 contains a tab but no comma, treat the whole file as
+  // TSV and rewrite to CSV.
+  let normalized = csv.replace(/^﻿/, '')
+  const firstLines = normalized.split(/\r?\n/).slice(0, 20)
+  const looksTabDelimited = firstLines.some(l => l.includes('\t')) && !firstLines.some(l => /^[^\t]*,[^\t]*,[^\t]*,/.test(l))
+  if (looksTabDelimited) {
+    // Split each line on tabs and rejoin with commas, quoting any cell that
+    // contains a comma, quote, or newline. Lines with no tab (metadata header
+    // rows) pass through unchanged.
+    normalized = normalized.split(/\r?\n/).map(line => {
+      if (!line.includes('\t')) return line
+      return line.split('\t').map(cell => {
+        if (/[",\n\r]/.test(cell)) return '"' + cell.replace(/"/g, '""') + '"'
+        return cell
+      }).join(',')
+    }).join('\n')
+  }
+
   // Split into lines, skip empty rows
-  const lines = csv.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+  const lines = normalized.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
   if (lines.length < 2) {
     return NextResponse.json({ error: 'CSV needs at least a header row and one data row.' }, { status: 400 })
   }
@@ -85,14 +107,19 @@ export async function POST(request: NextRequest) {
   const headers = parseCsvRow(lines[headerIndex])
 
   const idColIdx = findCol(headers, ['Campaign ID', 'CampaignID', 'Campaign Id', 'campaign_id'])
+  // LinkedIn's hierarchy: Campaign > Ad Set > Ad. The ID we actually store in
+  // linkedin_campaign_id is the AD SET ID (what adAnalyticsV2 returns when you
+  // query a Sponsored Update campaign). The CSV export labels the parent as
+  // "Campaign ID" and the thing we track as "Ad Set ID" — so we must try both.
+  const adSetColIdx = findCol(headers, ['Ad Set ID', 'AdSetID', 'Ad Set Id', 'ad_set_id'])
   const impColIdx = findCol(headers, ['Impressions', 'Total Impressions'])
   const clkColIdx = findCol(headers, ['Clicks', 'Total Clicks'])
   const spendColIdx = findCol(headers, ['Total Spent', 'Total Spent (USD)', 'Total Spent in Account Currency', 'Amount Spent', 'Cost', 'Spend', 'Total Amount Spent'])
   const leadsColIdx = findCol(headers, ['Leads', 'Total Leads', 'Lead Gen Form Completions'])
 
-  if (idColIdx === -1) {
+  if (idColIdx === -1 && adSetColIdx === -1) {
     return NextResponse.json({
-      error: 'Could not find a "Campaign ID" column in the CSV. LinkedIn Campaign Manager → Analytics → Export should include this column.',
+      error: 'Could not find a "Campaign ID" or "Ad Set ID" column in the CSV. LinkedIn Campaign Manager → Analytics → Export should include at least one of these columns.',
       headers_found: headers,
     }, { status: 400 })
   }
@@ -116,14 +143,25 @@ export async function POST(request: NextRequest) {
   for (let i = headerIndex + 1; i < lines.length; i++) {
     const cells = parseCsvRow(lines[i])
     if (cells.length < headers.length - 2) continue // row too short, likely a footer
-    const linkedinId = extractCampaignId(cells[idColIdx])
-    if (!linkedinId || !/^\d+$/.test(linkedinId)) continue // not a campaign row
 
-    const match = byLinkedInId.get(linkedinId)
+    // Try Campaign ID first (cheaper — it's the column most users think of),
+    // then fall back to Ad Set ID which is what our DB actually stores.
+    const campaignIdFromCsv = idColIdx >= 0 ? extractCampaignId(cells[idColIdx]) : ''
+    const adSetIdFromCsv = adSetColIdx >= 0 ? extractCampaignId(cells[adSetColIdx]) : ''
+    const candidates = [campaignIdFromCsv, adSetIdFromCsv].filter(id => id && /^\d+$/.test(id))
+    if (candidates.length === 0) continue // neither column had a numeric id on this row
+
+    let match: { id: string; campaign_name: string } | undefined
+    let matchedVia = ''
+    for (const id of candidates) {
+      match = byLinkedInId.get(id)
+      if (match) { matchedVia = id; break }
+    }
     if (!match) {
-      not_found.push(linkedinId)
+      not_found.push(candidates.join('/'))
       continue
     }
+    const linkedinId = matchedVia
 
     const impressions = impColIdx >= 0 ? toNumber(cells[impColIdx]) : 0
     const clicks = clkColIdx >= 0 ? toNumber(cells[clkColIdx]) : 0
@@ -157,6 +195,7 @@ export async function POST(request: NextRequest) {
     errors,
     columns_detected: {
       campaign_id: idColIdx >= 0 ? headers[idColIdx] : null,
+      ad_set_id: adSetColIdx >= 0 ? headers[adSetColIdx] : null,
       impressions: impColIdx >= 0 ? headers[impColIdx] : null,
       clicks: clkColIdx >= 0 ? headers[clkColIdx] : null,
       spend: spendColIdx >= 0 ? headers[spendColIdx] : null,

@@ -125,16 +125,17 @@ export default async function DashboardPage() {
 }
 
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string | number; sub: string }) {
+  // Icon moved to top-right as a muted accent (not a teal-filled square on the
+  // left). The value is now the unambiguous focal point; the icon adds a hint
+  // of visual personality without competing with the data for attention.
   return (
-    <div className="bg-white border rounded-lg p-4 flex items-start gap-3 shadow-sm">
-      <div className="p-2 rounded-lg" style={{ backgroundColor: '#e8f5f9' }}>
+    <div className="bg-white border rounded-lg p-4 shadow-sm relative">
+      <div className="absolute top-3 right-3 opacity-40">
         {icon}
       </div>
-      <div>
-        <div className="text-2xl font-bold" style={{ color: '#00263E' }}>{value}</div>
-        <div className="text-sm font-medium text-gray-700">{label}</div>
-        <div className="text-xs text-gray-400">{sub}</div>
-      </div>
+      <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#5F6D77' }}>{label}</div>
+      <div className="text-3xl font-bold mt-1 tabular-nums" style={{ color: '#00263E' }}>{value}</div>
+      <div className="text-xs text-gray-400 mt-1">{sub}</div>
     </div>
   )
 }

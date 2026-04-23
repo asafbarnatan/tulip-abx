@@ -1,0 +1,140 @@
+export const dynamic = 'force-dynamic'
+
+import { supabase } from '@/lib/supabase'
+import type { Account } from '@/lib/database.types'
+import AccountCard from '@/components/AccountCard'
+import { Building2, TrendingUp, Zap, Users } from 'lucide-react'
+
+async function getAccounts(): Promise<Account[]> {
+  const { data, error } = await supabase
+    .from('accounts')
+    .select('*')
+    .order('tier', { ascending: true })
+    .order('icp_fit_score', { ascending: false })
+
+  if (error) {
+    console.error('Failed to fetch accounts:', error)
+    return []
+  }
+  return data ?? []
+}
+
+export default async function DashboardPage() {
+  const accounts = await getAccounts()
+
+  const tier1 = accounts.filter(a => a.tier === 1)
+  const tier2 = accounts.filter(a => a.tier === 2)
+  const tier3 = accounts.filter(a => a.tier === 3)
+
+  const avgEngagement = accounts.length
+    ? Math.round(accounts.reduce((s, a) => s + a.engagement_score, 0) / accounts.length)
+    : 0
+
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold" style={{ color: '#00263E' }}>
+          Account Intelligence Dashboard
+        </h1>
+        <p className="text-gray-500 mt-1 text-sm">
+          {accounts.length} named accounts · AI-powered positioning · Cross-functional ABX coordination
+        </p>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        <StatCard
+          icon={<Building2 className="w-5 h-5" style={{ color: '#008CB9' }} />}
+          label="Tier 1 Accounts"
+          value={tier1.length}
+          sub="Strategic priority"
+        />
+        <StatCard
+          icon={<TrendingUp className="w-5 h-5" style={{ color: '#008CB9' }} />}
+          label="In Pipeline"
+          value={accounts.filter(a => a.lifecycle_stage === 'pipeline').length}
+          sub="Active opportunities"
+        />
+        <StatCard
+          icon={<Zap className="w-5 h-5" style={{ color: '#008CB9' }} />}
+          label="Prospects"
+          value={accounts.filter(a => a.lifecycle_stage === 'prospect').length}
+          sub="Top of funnel"
+        />
+        <StatCard
+          icon={<Users className="w-5 h-5" style={{ color: '#008CB9' }} />}
+          label="Avg Engagement"
+          value={`${avgEngagement}`}
+          sub="Score out of 100"
+        />
+      </div>
+
+      {/* Tier 1 */}
+      {tier1.length > 0 && (
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-bold px-2 py-0.5 rounded text-white" style={{ backgroundColor: '#00263E' }}>
+              TIER 1
+            </span>
+            <span className="text-sm text-gray-500 font-medium">Strategic Accounts — highest priority, full ABX motion</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {tier1.map(account => (
+              <AccountCard key={account.id} account={account} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Tier 2 */}
+      {tier2.length > 0 && (
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-bold px-2 py-0.5 rounded text-white bg-gray-500">
+              TIER 2
+            </span>
+            <span className="text-sm text-gray-500 font-medium">Growth Accounts — targeted plays, scalable motions</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {tier2.map(account => (
+              <AccountCard key={account.id} account={account} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Tier 3 */}
+      {tier3.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-bold px-2 py-0.5 rounded text-white bg-gray-400">
+              TIER 3
+            </span>
+            <span className="text-sm text-gray-500 font-medium">Nurture Accounts — low-touch, programmatic</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {tier3.map(account => (
+              <AccountCard key={account.id} account={account} />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  )
+}
+
+function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string | number; sub: string }) {
+  return (
+    <div className="bg-white border rounded-lg p-4 flex items-start gap-3 shadow-sm">
+      <div className="p-2 rounded-lg" style={{ backgroundColor: '#e8f5f9' }}>
+        {icon}
+      </div>
+      <div>
+        <div className="text-2xl font-bold" style={{ color: '#00263E' }}>{value}</div>
+        <div className="text-sm font-medium text-gray-700">{label}</div>
+        <div className="text-xs text-gray-400">{sub}</div>
+      </div>
+    </div>
+  )
+}

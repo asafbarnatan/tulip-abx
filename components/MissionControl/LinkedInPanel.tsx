@@ -461,7 +461,7 @@ export function LinkedInPanel({ initialConnected, accountId }: Props) {
                         border: isPinned ? '1px solid var(--tulip-celery)' : '1px solid transparent',
                         cursor: 'pointer',
                         color: isPinned ? 'var(--tulip-navy)' : '#64748b',
-                        padding: '6px', lineHeight: 0, borderRadius: 4,
+                        padding: '8px', lineHeight: 0, borderRadius: 4,
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       }}
                       onMouseEnter={e => {
@@ -520,7 +520,7 @@ export function LinkedInPanel({ initialConnected, accountId }: Props) {
                         title="Delete campaign from Tulip ABX"
                         style={{
                           background: 'transparent', border: '1px solid transparent', cursor: 'pointer',
-                          color: '#64748b', padding: '6px', lineHeight: 0, borderRadius: 4,
+                          color: '#64748b', padding: '8px', lineHeight: 0, borderRadius: 4,
                           opacity: deletingId === c.id ? 0.4 : 1,
                           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         }}

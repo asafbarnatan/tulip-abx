@@ -35,6 +35,7 @@ export default function MissionControlPage() {
   const [stopConfirming, setStopConfirming] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [stopResult, setStopResult] = useState<string | null>(null)
+  const [stopHover, setStopHover] = useState(false)
   const [linkedInConnected, setLinkedInConnected] = useState(false)
   const [campaignCount, setCampaignCount] = useState<number | null>(null)
   const [runCount, setRunCount] = useState<number | null>(null)
@@ -199,122 +200,161 @@ export default function MissionControlPage() {
               )}
             </div>
 
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative', flexWrap: 'wrap' }}
-              onMouseEnter={() => setSignalWatchHover(true)}
-              onMouseLeave={() => setSignalWatchHover(false)}
-            >
-              {/* Stop-all-agents — red outline, two-stage confirm to avoid misclick.
-                  Positioned before Run Signal Watch so the "panic button" is near
-                  the other agent controls and easy to find in an emergency. */}
-              {stopConfirming ? (
-                <div
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '6px 10px', borderRadius: 6,
-                    backgroundColor: 'rgba(220, 38, 38, 0.15)',
-                    border: '1.5px solid #fca5a5',
-                  }}
-                >
-                  <button
-                    onClick={stopAllAgents}
-                    disabled={stopping}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 4,
-                      padding: '6px 12px', borderRadius: 4,
-                      border: 'none', cursor: stopping ? 'not-allowed' : 'pointer',
-                      backgroundColor: '#dc2626', color: 'white',
-                      fontSize: 11, fontWeight: 700, opacity: stopping ? 0.7 : 1,
-                    }}
-                  >
-                    <Square size={11} fill="currentColor" />
-                    {stopping ? 'Stopping…' : 'Confirm stop'}
-                  </button>
-                  <button
-                    onClick={() => setStopConfirming(false)}
-                    disabled={stopping}
-                    style={{
-                      padding: '6px 10px', borderRadius: 4,
-                      border: 'none', cursor: 'pointer',
-                      backgroundColor: 'transparent', color: 'white',
-                      fontSize: 11, fontWeight: 600, opacity: 0.85,
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setStopConfirming(true)}
-                  title="Halt every running or pending agent. Flags them as failed in the DB. The orchestrator stops chaining new agents on the next tick."
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '8px 14px', borderRadius: 6,
-                    border: '1.5px solid #fca5a5',
-                    backgroundColor: 'transparent',
-                    color: '#fca5a5',
-                    fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <Square size={12} fill="currentColor" />
-                  Stop all agents
-                </button>
-              )}
-
-              <button
-                onClick={runSignalWatch}
-                disabled={isSignalWatchRunning}
-                onFocus={() => setSignalWatchHover(true)}
-                onBlur={() => setSignalWatchHover(false)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px',
-                  borderRadius: 6, border: '1.5px solid var(--tulip-celery)',
-                  backgroundColor: 'transparent',
-                  color: 'var(--tulip-celery)',
-                  fontSize: 12, fontWeight: 700, cursor: isSignalWatchRunning ? 'not-allowed' : 'pointer',
-                  opacity: isSignalWatchRunning ? 0.7 : 1, transition: 'all 0.15s',
-                }}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              {/* Stop-all-agents — each button owns its own relative wrapper + hover
+                  state + tooltip so hovering one button never reveals the other's
+                  description. Earlier version scoped hover on the outer cluster and
+                  only Signal Watch had a tooltip, so hovering Stop showed Signal's
+                  definition. */}
+              <div
+                style={{ position: 'relative' }}
+                onMouseEnter={() => setStopHover(true)}
+                onMouseLeave={() => setStopHover(false)}
               >
-                {isSignalWatchRunning ? (
-                  <>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', border: '2px solid currentColor', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} />
-                    Watching...
-                  </>
+                {stopConfirming ? (
+                  <div
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '6px 10px', borderRadius: 6,
+                      backgroundColor: 'rgba(220, 38, 38, 0.15)',
+                      border: '1.5px solid #fca5a5',
+                    }}
+                  >
+                    <button
+                      onClick={stopAllAgents}
+                      disabled={stopping}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        padding: '6px 12px', borderRadius: 4,
+                        border: 'none', cursor: stopping ? 'not-allowed' : 'pointer',
+                        backgroundColor: '#dc2626', color: 'white',
+                        fontSize: 11, fontWeight: 700, opacity: stopping ? 0.7 : 1,
+                      }}
+                    >
+                      <Square size={11} fill="currentColor" />
+                      {stopping ? 'Stopping…' : 'Confirm stop'}
+                    </button>
+                    <button
+                      onClick={() => setStopConfirming(false)}
+                      disabled={stopping}
+                      style={{
+                        padding: '6px 10px', borderRadius: 4,
+                        border: 'none', cursor: 'pointer',
+                        backgroundColor: 'transparent', color: 'white',
+                        fontSize: 11, fontWeight: 600, opacity: 0.85,
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 ) : (
-                  <><Zap size={14} strokeWidth={2.5} /> Run Signal Watch</>
+                  <button
+                    onClick={() => setStopConfirming(true)}
+                    onFocus={() => setStopHover(true)}
+                    onBlur={() => setStopHover(false)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '8px 14px', borderRadius: 6,
+                      border: '1.5px solid #fca5a5',
+                      backgroundColor: 'transparent',
+                      color: '#fca5a5',
+                      fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <Square size={12} fill="currentColor" />
+                    Stop all agents
+                  </button>
                 )}
-              </button>
 
-              {/* Hover definition — white card on navy header, inverse of KPI tile tooltips */}
-              {signalWatchHover && !isSignalWatchRunning && (
-                <div
-                  role="tooltip"
+                {stopHover && !stopConfirming && (
+                  <div
+                    role="tooltip"
+                    style={{
+                      position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                      width: 340, zIndex: 40,
+                      backgroundColor: 'white', color: '#00263E',
+                      borderRadius: 8, padding: '12px 14px',
+                      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
+                      fontSize: 12, lineHeight: 1.55, fontWeight: 400,
+                      pointerEvents: 'none',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: '#dc2626', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
+                      Stop All Agents
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      Flags every running or pending agent as failed in the database so the orchestrator stops chaining new agents on the next tick.
+                    </div>
+                    <div style={{ fontSize: 10, color: '#dc2626', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
+                      Caveat
+                    </div>
+                    <div style={{ color: '#5F6D77' }}>
+                      Does not abort an in-flight Anthropic HTTP call already mid-request. That request finishes naturally, writes its tool-result row, and then the orchestrator sees the run flagged as failed. For a hard stop right now, restart the dev server.
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{ position: 'relative' }}
+                onMouseEnter={() => setSignalWatchHover(true)}
+                onMouseLeave={() => setSignalWatchHover(false)}
+              >
+                <button
+                  onClick={runSignalWatch}
+                  disabled={isSignalWatchRunning}
+                  onFocus={() => setSignalWatchHover(true)}
+                  onBlur={() => setSignalWatchHover(false)}
                   style={{
-                    position: 'absolute', top: 'calc(100% + 10px)', right: 0,
-                    width: 340, zIndex: 40,
-                    backgroundColor: 'white', color: '#00263E',
-                    borderRadius: 8, padding: '12px 14px',
-                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
-                    fontSize: 12, lineHeight: 1.55, fontWeight: 400,
-                    pointerEvents: 'none',
-                    textAlign: 'left',
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px',
+                    borderRadius: 6, border: '1.5px solid var(--tulip-celery)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--tulip-celery)',
+                    fontSize: 12, fontWeight: 700, cursor: isSignalWatchRunning ? 'not-allowed' : 'pointer',
+                    opacity: isSignalWatchRunning ? 0.7 : 1, transition: 'all 0.15s',
                   }}
                 >
-                  <div style={{ fontSize: 10, color: '#008CB9', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
-                    Signal Watcher Agent
+                  {isSignalWatchRunning ? (
+                    <>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', border: '2px solid currentColor', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} />
+                      Watching...
+                    </>
+                  ) : (
+                    <><Zap size={14} strokeWidth={2.5} /> Run Signal Watch</>
+                  )}
+                </button>
+
+                {signalWatchHover && !isSignalWatchRunning && (
+                  <div
+                    role="tooltip"
+                    style={{
+                      position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                      width: 340, zIndex: 40,
+                      backgroundColor: 'white', color: '#00263E',
+                      borderRadius: 8, padding: '12px 14px',
+                      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
+                      fontSize: 12, lineHeight: 1.55, fontWeight: 400,
+                      pointerEvents: 'none',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: '#008CB9', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
+                      Signal Watcher Agent
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      Sweeps all accounts at once, re-ranks them by urgency based on unprocessed signals, and updates intent scores where the data supports it.
+                    </div>
+                    <div style={{ fontSize: 10, color: '#008CB9', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
+                      Drives
+                    </div>
+                    <div style={{ color: '#5F6D77' }}>
+                      The colored urgency borders in Account Pulse below · the Intent score column on each account · urgency strip at top of account detail.
+                    </div>
                   </div>
-                  <div style={{ marginBottom: 8 }}>
-                    Sweeps all accounts at once, re-ranks them by urgency based on unprocessed signals, and updates intent scores where the data supports it.
-                  </div>
-                  <div style={{ fontSize: 10, color: '#008CB9', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
-                    Drives
-                  </div>
-                  <div style={{ color: '#5F6D77' }}>
-                    The colored urgency borders in Account Pulse below · the Intent score column on each account · urgency strip at top of account detail.
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

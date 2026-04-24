@@ -1670,16 +1670,27 @@ function CampaignKpiPanel({ campaign }: { campaign: Campaign }) {
           help="% of target accounts that received at least one impression. 100% = full ABM coverage."
         />
         <KpiTile
-          label="Buying committee"
-          value={k.buyingCommitteeDepth != null ? k.buyingCommitteeDepth.toFixed(1) : '—'}
+          label="Engagements"
+          value={(campaign.total_engagements ?? 0).toLocaleString()}
           band={bandColor('neutral')}
-          help="Avg clicks per target account — proxy for buying-committee depth reached."
+          help="Reactions + comments + shares + follows + other clicks. LinkedIn's headline engagement metric on Sponsored Content."
         />
         <KpiTile
-          label="Decision-maker %"
-          value={campaign.decision_maker_pct != null ? `${Number(campaign.decision_maker_pct).toFixed(0)}%` : '—'}
-          band={bandColor('neutral')}
-          help="Share of impressions served to VP+ titles. Sourced from LinkedIn Demographics tab or live Demographics API."
+          label="Engagement rate"
+          value={campaign.impressions > 0
+            ? `${((Number(campaign.total_engagements ?? 0) / campaign.impressions) * 100).toFixed(2)}%`
+            : '—'}
+          band={bandColor(
+            campaign.impressions > 0
+              ? (() => {
+                  const r = (Number(campaign.total_engagements ?? 0) / campaign.impressions) * 100
+                  if (r >= 2) return 'green'
+                  if (r >= 0.5) return 'amber'
+                  return 'red'
+                })()
+              : 'neutral'
+          )}
+          help="Engagements ÷ impressions. B2B Sponsored Content median ~0.5-1%; top-quartile ≥2%."
         />
       </div>
     </div>

@@ -1,12 +1,11 @@
-// Apply newest Bayer LinkedIn Campaign Manager numbers (Apr 23 2026 snapshot):
+// Apply newest Bayer LinkedIn Campaign Manager export (Apr 24 2026, 11:43 PM UTC):
 //
-//   Impressions:        39
-//   Clicks:              0
-//   Total engagement:    3
-//   Engagement rate:   7.69%   ← computed on the fly (3 / 39 * 100)
-//
-// Engagement rate is NOT stored — /api/kpis derives it from
-// total_engagements / impressions so it always matches the two inputs.
+//   CSV summed across 4/23 + 4/24 rows:
+//     Impressions:        19 + 20 = 39
+//     Clicks:              0 +  0 =  0
+//     Total Engagements:   2 +  1 =  3
+//     Total Spent:  $16.50 + $16.50 = $33.00
+//   Engagement rate = 3 / 39 = 7.69% (computed, not stored)
 //
 // Requires the 2026-04-24_campaign_engagements migration to have been run
 // first (adds total_engagements column on linkedin_campaigns).
@@ -17,6 +16,9 @@ const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_A
 
 const payload = {
   impressions: 39,
+  clicks: 0,
+  cost_usd: 33.00,
+  leads: 0,
   total_engagements: 3,
   updated_at: new Date().toISOString(),
 }

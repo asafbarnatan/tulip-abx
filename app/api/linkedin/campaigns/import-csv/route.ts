@@ -140,6 +140,13 @@ export async function POST(request: NextRequest) {
   const not_found: string[] = []
   const errors: string[] = []
 
+  // LinkedIn's Ad Performance Report partitions by day: a single ad running
+  // for 5 days produces 5 rows. Earlier versions of this endpoint wrote each
+  // row directly, so the last row's metrics clobbered the sum. Accumulate
+  // into a per-campaign bucket and write ONCE at the end.
+  type Bucket = { match: { id: string; campaign_name: string }; linkedinId: string; impressions: number; clicks: number; cost_usd: number; leads: number; rowCount: number }
+  const buckets = new Map<string, Bucket>()
+
   for (let i = headerIndex + 1; i < lines.length; i++) {
     const cells = parseCsvRow(lines[i])
     if (cells.length < headers.length - 2) continue // row too short, likely a footer
@@ -168,21 +175,43 @@ export async function POST(request: NextRequest) {
     const cost_usd = spendColIdx >= 0 ? toNumber(cells[spendColIdx]) : 0
     const leads = leadsColIdx >= 0 ? toNumber(cells[leadsColIdx]) : 0
 
+    const b = buckets.get(match.id)
+    if (!b) {
+      buckets.set(match.id, { match, linkedinId, impressions, clicks, cost_usd, leads, rowCount: 1 })
+    } else {
+      b.impressions += impressions
+      b.clicks += clicks
+      b.cost_usd += cost_usd
+      b.leads += leads
+      b.rowCount += 1
+    }
+  }
+
+  for (const b of buckets.values()) {
+    // Round cost to cents — sums of 2-decimal numbers can pick up FP noise.
+    const cost_usd = Math.round(b.cost_usd * 100) / 100
     const { error: updateErr } = await sb
       .from('linkedin_campaigns')
       .update({
-        impressions,
-        clicks,
+        impressions: b.impressions,
+        clicks: b.clicks,
         cost_usd,
-        leads,
+        leads: b.leads,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', match.id)
+      .eq('id', b.match.id)
 
     if (updateErr) {
-      errors.push(`${match.campaign_name}: ${updateErr.message}`)
+      errors.push(`${b.match.campaign_name}: ${updateErr.message}`)
     } else {
-      matched.push({ linkedin_campaign_id: linkedinId, campaign_name: match.campaign_name, impressions, clicks, cost_usd, leads })
+      matched.push({
+        linkedin_campaign_id: b.linkedinId,
+        campaign_name: b.match.campaign_name,
+        impressions: b.impressions,
+        clicks: b.clicks,
+        cost_usd,
+        leads: b.leads,
+      })
     }
   }
 

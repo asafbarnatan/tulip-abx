@@ -1,11 +1,30 @@
 'use client'
 
-import type { Account } from '@/lib/database.types'
+import type { Account, CustomPlay } from '@/lib/database.types'
 import { getRecommendedPlays } from '@/lib/play-library'
 import { Card, CardContent } from '@/components/ui/card'
-import { Calendar, Users, FileText, Zap, Copy, Check, CheckCircle, Play as PlayIcon } from 'lucide-react'
+import { Calendar, Users, FileText, Zap, Copy, Check, CheckCircle, Play as PlayIcon, Plus, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import PlayActivationModal, { type PlayActivationPayload } from './PlayActivationModal'
+import CustomPlayEditor from './CustomPlayEditor'
+
+// Renderable play — discriminates library vs custom at the UI level.
+// Library plays have trigger_conditions; custom plays have created_by fields.
+// We only care about the display shape, so the discriminator on __isCustom
+// is enough to branch the Edit/Delete affordances on custom rows.
+type RenderablePlay = {
+  id: string
+  name: string
+  description: string
+  play_type: 'outbound' | 'inbound' | 'event' | 'exec' | 'demo' | 'cs_expansion' | 'content'
+  owner_team: 'marketing' | 'sales' | 'sdr' | 'cs'
+  duration_days: number
+  assets: string[]
+  sample_outreach_opener: string
+  expected_outcome: string
+  __isCustom: boolean
+  __customRow?: CustomPlay  // present only when __isCustom = true
+}
 
 const PLAY_TYPE_CONFIG: Record<string, { color: string; icon: React.ReactNode; actionType: string }> = {
   demo:         { color: 'bg-blue-50 text-blue-700 border-blue-200',       icon: <Zap className="w-3.5 h-3.5" />,       actionType: 'demo' },
@@ -50,7 +69,7 @@ function CopyOpenerButton({ text }: { text: string }) {
 }
 
 export default function PlayRecommender({ account }: { account: Account }) {
-  const plays = getRecommendedPlays({
+  const libraryPlays = getRecommendedPlays({
     lifecycle_stage: account.lifecycle_stage,
     industry_vertical: account.industry_vertical,
     geography: account.geography,
@@ -58,13 +77,62 @@ export default function PlayRecommender({ account }: { account: Account }) {
     tier: account.tier,
   })
 
+  // Custom plays fetched from /api/custom-plays. Sorted newest-first by the
+  // API; we render them above library plays so the AE's explicit choices
+  // dominate the scan order.
+  const [customPlays, setCustomPlays] = useState<CustomPlay[]>([])
+
   // Activation state — map play_id → action_id so deactivation can DELETE the
   // corresponding action row. Fetched on mount from account_actions notes JSON.
   const [activationMap, setActivationMap] = useState<Record<string, string>>({})
-  const [activationModalPlay, setActivationModalPlay] = useState<(typeof plays)[number] | null>(null)
+  const [activationModalPlay, setActivationModalPlay] = useState<RenderablePlay | null>(null)
   const [deactivatingPlayId, setDeactivatingPlayId] = useState<string | null>(null)
   const [confirmingDeactivatePlayId, setConfirmingDeactivatePlayId] = useState<string | null>(null)
   const [savedToast, setSavedToast] = useState<string | null>(null)
+
+  // Custom-play CRUD state — addModal true = create; editing = edit.
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  const [editingCustomPlay, setEditingCustomPlay] = useState<CustomPlay | null>(null)
+  const [confirmingDeleteCustomId, setConfirmingDeleteCustomId] = useState<string | null>(null)
+  const [deletingCustomId, setDeletingCustomId] = useState<string | null>(null)
+
+  // Fetch custom plays on mount / account change.
+  useEffect(() => {
+    fetch(`/api/custom-plays?accountId=${account.id}`)
+      .then(r => r.json())
+      .then(d => setCustomPlays((d.plays ?? []) as CustomPlay[]))
+      .catch(() => { /* non-fatal — table may not exist pre-migration */ })
+  }, [account.id])
+
+  // Merge into one render list. Custom plays first (AE intentional > filtered
+  // library defaults). Both types go through the same card renderer below.
+  const plays: RenderablePlay[] = [
+    ...customPlays.map(cp => ({
+      id: cp.id,
+      name: cp.name,
+      description: cp.description,
+      play_type: cp.play_type,
+      owner_team: cp.owner_team,
+      duration_days: cp.duration_days,
+      assets: cp.assets,
+      sample_outreach_opener: cp.sample_outreach_opener,
+      expected_outcome: cp.expected_outcome,
+      __isCustom: true,
+      __customRow: cp,
+    } as RenderablePlay)),
+    ...libraryPlays.map(lp => ({
+      id: lp.id,
+      name: lp.name,
+      description: lp.description,
+      play_type: lp.play_type,
+      owner_team: lp.owner_team,
+      duration_days: lp.duration_days,
+      assets: lp.assets,
+      sample_outreach_opener: lp.sample_outreach_opener,
+      expected_outcome: lp.expected_outcome,
+      __isCustom: false,
+    } as RenderablePlay)),
+  ]
 
   // On mount, fetch existing actions and build the play_id → action_id map.
   // Handles the case where the same play was activated multiple times — keeps
@@ -90,7 +158,7 @@ export default function PlayRecommender({ account }: { account: Account }) {
       .catch(() => { /* non-fatal */ })
   }, [account.id])
 
-  const handleActivate = async (play: (typeof plays)[number], payload: PlayActivationPayload) => {
+  const handleActivate = async (play: RenderablePlay, payload: PlayActivationPayload) => {
     const cfg = PLAY_TYPE_CONFIG[play.play_type] ?? PLAY_TYPE_CONFIG.content
     const notes = JSON.stringify({
       play_id: play.id,
@@ -129,7 +197,7 @@ export default function PlayRecommender({ account }: { account: Account }) {
 
   // Deactivate = delete the linked account_actions row. Two-stage confirm so
   // a misclick doesn't destroy someone else's commitment without warning.
-  const handleDeactivate = async (play: (typeof plays)[number]) => {
+  const handleDeactivate = async (play: RenderablePlay) => {
     const actionId = activationMap[play.id]
     if (!actionId) return
     setDeactivatingPlayId(play.id)
@@ -150,26 +218,90 @@ export default function PlayRecommender({ account }: { account: Account }) {
     }
   }
 
+  // Delete a custom play permanently. The API also deletes any linked
+  // account_actions rows (activations of this play), so the UI removes the
+  // corresponding activationMap entry too.
+  const handleDeleteCustom = async (customPlayId: string) => {
+    setDeletingCustomId(customPlayId)
+    try {
+      const res = await fetch(`/api/custom-plays/${customPlayId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setCustomPlays(prev => prev.filter(p => p.id !== customPlayId))
+        setActivationMap(prev => {
+          const next = { ...prev }
+          delete next[customPlayId]
+          return next
+        })
+        setSavedToast('Custom play removed. Any linked activation has been pulled from the Actions tab.')
+        setTimeout(() => setSavedToast(null), 5000)
+      }
+    } finally {
+      setDeletingCustomId(null)
+      setConfirmingDeleteCustomId(null)
+    }
+  }
+
+  // Upsert handler for both create and edit paths coming out of CustomPlayEditor.
+  const handleCustomSaved = (saved: CustomPlay) => {
+    setCustomPlays(prev => {
+      const idx = prev.findIndex(p => p.id === saved.id)
+      if (idx === -1) return [saved, ...prev]
+      const next = [...prev]
+      next[idx] = saved
+      return next
+    })
+    setSavedToast(editingCustomPlay ? `"${saved.name}" updated.` : `"${saved.name}" added to ${account.name}.`)
+    setTimeout(() => setSavedToast(null), 5000)
+  }
+
+  const addButton = (
+    <button
+      type="button"
+      onClick={() => setAddModalOpen(true)}
+      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors shrink-0"
+      style={{ backgroundColor: '#00263E', color: '#F2EEA1' }}
+    >
+      <Plus className="w-3.5 h-3.5" strokeWidth={3} /> Add custom play
+    </button>
+  )
+
   if (plays.length === 0) {
     return (
-      <div className="bg-white border rounded-xl p-12 text-center text-gray-400">
-        <p className="font-medium">No plays match this account&apos;s current profile.</p>
-        <p className="text-sm mt-1">Update the account&apos;s lifecycle stage or maturity level to unlock relevant plays.</p>
-      </div>
+      <>
+        <div className="bg-white border rounded-xl p-12 text-center text-gray-400">
+          <p className="font-medium">No plays match this account&apos;s current profile.</p>
+          <p className="text-sm mt-1">Add a custom play for this account, or update the account&apos;s lifecycle stage / maturity to unlock relevant templates.</p>
+          <div className="mt-4 flex justify-center">{addButton}</div>
+        </div>
+        {addModalOpen && (
+          <CustomPlayEditor
+            accountId={account.id}
+            accountName={account.name}
+            onClose={() => setAddModalOpen(false)}
+            onSaved={handleCustomSaved}
+          />
+        )}
+      </>
     )
   }
 
   return (
     <div className="space-y-4">
-      <div className="bg-white border rounded-xl p-4">
-        <p className="text-sm text-gray-600">
+      <div className="bg-white border rounded-xl p-4 flex items-start justify-between gap-4 flex-wrap">
+        <p className="text-sm text-gray-600 flex-1 min-w-0">
           <span className="font-semibold" style={{ color: '#00263E' }}>
-            {plays.length} plays recommended
+            {plays.length} {plays.length === 1 ? 'play' : 'plays'}
           </span>{' '}
-          for {account.name} based on lifecycle stage ({account.lifecycle_stage}), vertical ({account.industry_vertical}),
-          geography ({account.geography}), and digital maturity ({account.digital_maturity}/5).
+          for {account.name}
+          {customPlays.length > 0 && (
+            <> — <span style={{ color: '#00263E', fontWeight: 600 }}>{customPlays.length} custom</span>, {libraryPlays.length} from the library</>
+          )}
+          {customPlays.length === 0 && (
+            <> based on lifecycle stage ({account.lifecycle_stage}), vertical ({account.industry_vertical}), geography ({account.geography}), and digital maturity ({account.digital_maturity}/5)</>
+          )}.
           {' '}Click <strong>Activate this play</strong> on any card to commit — it appears in the Actions tab immediately, attributed to you.
         </p>
+        {addButton}
       </div>
 
       {savedToast && (
@@ -210,15 +342,70 @@ export default function PlayRecommender({ account }: { account: Account }) {
                         {play.owner_team.toUpperCase()}
                       </span>
                       <span className="text-xs text-gray-400">{play.duration_days}-day play</span>
+                      {play.__isCustom && (
+                        <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--tulip-celery)', color: 'var(--tulip-navy)' }}>
+                          Custom
+                        </span>
+                      )}
                       {activated && (
                         <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: '#22c55e', color: 'white' }}>
                           Activated
                         </span>
                       )}
                     </div>
+                    {play.__isCustom && play.__customRow?.created_by_name && (
+                      <div className="text-[11px] text-gray-500 mt-1">
+                        Added by {play.__customRow.created_by_name}
+                        {play.__customRow.created_by_role ? ` · ${play.__customRow.created_by_role}` : ''}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                  {play.__isCustom && play.__customRow && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setEditingCustomPlay(play.__customRow!)}
+                        title="Edit this custom play"
+                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors hover:bg-gray-50"
+                        style={{ borderColor: '#d0dbe6', color: '#64748b' }}
+                      >
+                        <Pencil className="w-3 h-3" /> Edit
+                      </button>
+                      {confirmingDeleteCustomId === play.id ? (
+                        <div className="flex items-center gap-1 bg-white border rounded-lg p-1" style={{ borderColor: '#fca5a5' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCustom(play.id)}
+                            disabled={deletingCustomId === play.id}
+                            className="text-[11px] font-bold px-2 py-1 rounded"
+                            style={{ backgroundColor: '#dc2626', color: 'white' }}
+                            title="Permanently deletes this custom play and any linked Activations"
+                          >
+                            {deletingCustomId === play.id ? 'Deleting…' : 'Confirm delete'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingDeleteCustomId(null)}
+                            className="text-[11px] text-gray-500 px-2 py-1 rounded hover:bg-gray-100"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmingDeleteCustomId(play.id)}
+                          title="Delete this custom play"
+                          className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors"
+                          style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+                        >
+                          <Trash2 className="w-3 h-3" /> Delete
+                        </button>
+                      )}
+                    </>
+                  )}
                   <CopyOpenerButton text={play.sample_outreach_opener} />
                   {activated ? (
                     confirmingDeactivate ? (
@@ -299,6 +486,25 @@ export default function PlayRecommender({ account }: { account: Account }) {
           play={activationModalPlay}
           onClose={() => setActivationModalPlay(null)}
           onSubmit={payload => handleActivate(activationModalPlay, payload)}
+        />
+      )}
+
+      {addModalOpen && (
+        <CustomPlayEditor
+          accountId={account.id}
+          accountName={account.name}
+          onClose={() => setAddModalOpen(false)}
+          onSaved={handleCustomSaved}
+        />
+      )}
+
+      {editingCustomPlay && (
+        <CustomPlayEditor
+          accountId={account.id}
+          accountName={account.name}
+          initial={editingCustomPlay}
+          onClose={() => setEditingCustomPlay(null)}
+          onSaved={handleCustomSaved}
         />
       )}
     </div>

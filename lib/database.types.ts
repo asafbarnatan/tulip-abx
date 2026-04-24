@@ -218,6 +218,29 @@ export interface AppSettings {
   updated_at: string
 }
 
+// Custom play — per-account ad-hoc play the AE writes themselves, stored
+// alongside the global PLAY_LIBRARY templates in lib/play-library.ts.
+// Same shape as the library Play interface so PlayRecommender can render
+// library + custom plays in one grid with no conditional rendering.
+export type PlayType = 'outbound' | 'inbound' | 'event' | 'exec' | 'demo' | 'cs_expansion' | 'content'
+
+export interface CustomPlay {
+  id: string
+  account_id: string
+  name: string
+  description: string
+  play_type: PlayType
+  owner_team: TeamType
+  duration_days: number
+  assets: string[]
+  sample_outreach_opener: string
+  expected_outcome: string
+  created_by_name: string | null
+  created_by_role: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface SalesforceOpportunity {
   id: string
   account_id: string | null

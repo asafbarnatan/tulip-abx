@@ -111,7 +111,24 @@
       "Bash(python -c \" import json, sys d = json.load\\(sys.stdin\\) b = \\(d.get\\('briefs'\\) or []\\)[0] if d.get\\('briefs'\\) else None if b: print\\('Bayer brief id:', b['id']\\); print\\('Tone:', b.get\\('recommended_tone'\\)\\) else: print\\('No Bayer brief yet'\\)\")",
       "Bash(python -c \" import json, sys d = json.load\\(sys.stdin\\) if d.get\\('brief'\\): print\\('tone now:', d['brief'].get\\('recommended_tone'\\)\\) elif d.get\\('error'\\): print\\('err:', d['error']\\) else: print\\(d\\)\")",
       "Bash(python -c \" import json, sys d = json.load\\(sys.stdin\\) briefs = d.get\\('briefs', []\\) if not briefs: print\\('No Daikin brief'\\); sys.exit\\(0\\) b = briefs[0] print\\('=== DAIKIN STRATEGIC PILLARS \\(current\\) ==='\\) for i, t in enumerate\\(\\(b.get\\('key_themes'\\) or []\\), 1\\): print\\(f'{i}. {t}'\\) print\\(\\) print\\('=== POSITIONING STATEMENT ==='\\) ps = b.get\\('positioning_statement'\\) or {} for k in \\('for','category','key_benefit','unlike','because'\\): print\\(f'{k:13s}: {ps.get\\(k\\)}'\\) \")",
-      "Bash(python -c \" import json, sys d = json.load\\(sys.stdin\\) briefs = d.get\\('briefs', []\\) if briefs: b = briefs[0] print\\('BRIEF_ID:', b['id']\\) print\\('CURRENT_PILLARS:'\\) for i, t in enumerate\\(\\(b.get\\('key_themes'\\) or []\\), 1\\): print\\(f' {i}. {t}'\\) \")"
+      "Bash(python -c \" import json, sys d = json.load\\(sys.stdin\\) briefs = d.get\\('briefs', []\\) if briefs: b = briefs[0] print\\('BRIEF_ID:', b['id']\\) print\\('CURRENT_PILLARS:'\\) for i, t in enumerate\\(\\(b.get\\('key_themes'\\) or []\\), 1\\): print\\(f' {i}. {t}'\\) \")",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix\\(linkedin\\): surface reorder POST failures instead of swallowing them *)",
+      "Bash(iconv -f UTF-16 -t UTF-8 \"C:/Users/asafb/Downloads/creative_1280406054_creative_performance_report \\(2\\).csv\")",
+      "Bash(python *)",
+      "Bash(git commit -m 'fix\\(linkedin\\): handle LinkedIn native exports \\(tab-delimited + Ad Set ID\\) *)",
+      "Bash(git commit -m 'fix\\(design\\): Stop + Run Signal Watch get separate tooltips *)",
+      "Bash(node scripts/daikin-review.mjs)",
+      "Bash(sed -n '22,65p' /tmp/daikin-after.txt)",
+      "Bash(node scripts/bayer-review.mjs)",
+      "Bash(sed -n '22,72p' /tmp/bayer-after.txt)",
+      "Bash(git commit -m 'fix\\(linkedin\\): aggregate CSV rows by ad set before writing *)",
+      "WebFetch(domain:tulip.co)",
+      "Bash(git commit -m 'feat\\(agent\\): customer-naming hard rule in PositioningAgent *)",
+      "Bash(node scripts/boston-review.mjs)",
+      "Bash(sed -n '30,65p' /tmp/bsc-after.txt)",
+      "Bash(git commit -m 'feat\\(agent\\): expand verified Tulip customer roster *)",
+      "Bash(git commit -m 'feat\\(plays\\): edit, add, and remove custom plays per account *)"
     ]
   }
 }

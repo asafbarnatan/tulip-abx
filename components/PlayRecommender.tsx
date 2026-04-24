@@ -241,6 +241,38 @@ export default function PlayRecommender({ account }: { account: Account }) {
     }
   }
 
+  // "Duplicate to custom" — takes a library play and POSTs a copy to
+  // /api/custom-plays for THIS account, then opens the editor on the new row
+  // so the user can tweak the copy. Library plays stay global/read-only.
+  const handleDuplicateAsCustom = async (play: RenderablePlay) => {
+    const body = {
+      account_id: account.id,
+      name: play.name,
+      description: play.description,
+      play_type: play.play_type,
+      owner_team: play.owner_team,
+      duration_days: play.duration_days,
+      sample_outreach_opener: play.sample_outreach_opener,
+      expected_outcome: play.expected_outcome,
+      assets: play.assets,
+      created_by_name: 'Duplicated from library',
+      created_by_role: null,
+    }
+    const res = await fetch('/api/custom-plays', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setSavedToast(data.error ?? 'Could not duplicate play.')
+      setTimeout(() => setSavedToast(null), 4000)
+      return
+    }
+    setCustomPlays(prev => [data.play, ...prev])
+    setEditingCustomPlay(data.play)  // open edit modal immediately on the new copy
+  }
+
   // Upsert handler for both create and edit paths coming out of CustomPlayEditor.
   const handleCustomSaved = (saved: CustomPlay) => {
     setCustomPlays(prev => {
@@ -405,6 +437,17 @@ export default function PlayRecommender({ account }: { account: Account }) {
                         </button>
                       )}
                     </>
+                  )}
+                  {!play.__isCustom && (
+                    <button
+                      type="button"
+                      onClick={() => handleDuplicateAsCustom(play)}
+                      title="Copy this library play into a custom play you can edit for this account"
+                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors hover:bg-gray-50"
+                      style={{ borderColor: '#d0dbe6', color: '#64748b' }}
+                    >
+                      <Pencil className="w-3 h-3" /> Duplicate to custom
+                    </button>
                   )}
                   <CopyOpenerButton text={play.sample_outreach_opener} />
                   {activated ? (

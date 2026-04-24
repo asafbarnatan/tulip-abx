@@ -310,6 +310,11 @@ export default function ActionLog({
               onUpdate={updated => {
                 setActions(prev => prev.map(a => a.id === updated.id ? updated : a))
               }}
+              onCreate={created => {
+                // Prepend the newly-cloned action so it's visible at the top
+                // of the feed, same sort order as the POST /api/actions path.
+                setActions(prev => [created, ...prev])
+              }}
               onDelete={async (deletedAction, rollbackStage) => {
                 // If the deleted action was a stage move, PATCH the account's
                 // interaction_stage back to the recorded from_stage first.
@@ -395,11 +400,13 @@ function ActionCard({
   currentStage,
   onUpdate,
   onDelete,
+  onCreate,
 }: {
   action: AccountAction
   currentStage?: InteractionStage | null
   onUpdate: (a: AccountAction) => void
   onDelete: (action: AccountAction, rollbackStage: string | null) => void | Promise<void>
+  onCreate: (a: AccountAction) => void
 }) {
   const icon = ACTION_ICONS[action.action_type]
   const teamColor = TEAM_COLORS[action.team]
@@ -507,6 +514,10 @@ function ActionCard({
           onClose={() => setEditingFull(false)}
           onSave={updated => {
             onUpdate(updated)
+            setEditingFull(false)
+          }}
+          onCreateNew={created => {
+            onCreate(created)
             setEditingFull(false)
           }}
         />

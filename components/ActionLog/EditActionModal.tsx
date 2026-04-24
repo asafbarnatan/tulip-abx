@@ -1,9 +1,16 @@
 'use client'
 
-import { useState } from 'react'
-import { X } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { X, Trash2, Plus, CopyPlus } from 'lucide-react'
 import type { AccountAction, ActionType, TeamType } from '@/lib/database.types'
 import { STAKEHOLDER_ROLE_PRESETS } from '@/lib/database.types'
+import {
+  parseStructuredNotes,
+  isRichPlayNote,
+  isStageMoveNote,
+  serializeStructuredNotes,
+  type StructuredNotes,
+} from '@/lib/action-notes'
 
 const ACTION_TYPES: { value: ActionType; label: string }[] = [
   { value: 'email',        label: 'Email' },
@@ -28,12 +35,22 @@ interface Props {
   action: AccountAction
   onClose: () => void
   onSave: (updated: AccountAction) => void
+  // Fired when user clicks "Save as new action" — spawns a POST /api/actions
+  // with the currently-edited values, leaves the original intact.
+  onCreateNew?: (created: AccountAction) => void
 }
 
-// Full-field editor for an existing action. Opens from the pencil button on
-// each card. The DELETE flow stays on the card with two-stage confirm — this
-// modal is only for non-destructive edits.
-export default function EditActionModal({ action, onClose, onSave }: Props) {
+// Full-field editor for an existing action. Detects whether the action has
+// rich structured content in notes (play activation: opener / why_now / rationale
+// / target / play_name) and renders per-field editors when it does — so the
+// fields shown match the fields rendered on the card. Plain-text notes fall
+// back to a single textarea.
+export default function EditActionModal({ action, onClose, onSave, onCreateNew }: Props) {
+  const structuredBase = useMemo(() => parseStructuredNotes(action.notes), [action.notes])
+  const isRich = isRichPlayNote(structuredBase)
+  const isStageMove = isStageMoveNote(structuredBase)
+
+  // ---- Base action fields (always editable) ----
   const [actionType, setActionType] = useState<ActionType>(action.action_type)
   const [team, setTeam] = useState<TeamType>(action.team)
   const [contactName, setContactName] = useState(action.contact_name ?? '')
@@ -49,63 +66,66 @@ export default function EditActionModal({ action, onClose, onSave }: Props) {
       ? action.assigned_role
       : ''
   )
-  // Notes — if this action has JSON-structured notes (e.g. stage move or play
-  // activation), editing the raw JSON is a foot-gun. We default to editing the
-  // user-facing `note` field inside the structure when present.
-  const structured = safeParse(action.notes)
-  const [noteText, setNoteText] = useState(
-    structured?.note ?? (typeof action.notes === 'string' && !structured ? action.notes : '')
+
+  // ---- Rich structured fields (editable when present) ----
+  const [playName, setPlayName] = useState(structuredBase?.play_name ?? '')
+  const [target, setTarget] = useState(structuredBase?.target ?? '')
+  const [opener, setOpener] = useState(structuredBase?.opener ?? '')
+  const [whyNow, setWhyNow] = useState<string[]>(Array.isArray(structuredBase?.why_now) ? structuredBase!.why_now! : [])
+  const [rationale, setRationale] = useState<string[]>(Array.isArray(structuredBase?.rationale) ? structuredBase!.rationale! : [])
+
+  // ---- "Free-form note" — the only field from the old modal ----
+  const [freeNote, setFreeNote] = useState(
+    structuredBase?.note ?? (typeof action.notes === 'string' && !structuredBase ? action.notes : '')
   )
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
   const effectiveRole = rolePreset === 'Other' ? customRole.trim() : rolePreset.trim()
+
+  // Build the notes string that will be saved. Preserves every key in the
+  // base structured object (including things we don't explicitly edit here
+  // like activated_at, play_id) so data ISN'T lost on save.
+  const buildNotes = (): string => {
+    if (!structuredBase) {
+      // Plain-text action — save whatever's in the free-form textarea
+      return freeNote
+    }
+    // Structured action — merge edits back into the existing object
+    const merged: StructuredNotes = { ...structuredBase }
+    if (isRich) {
+      merged.play_name = playName.trim() || null
+      merged.target = target.trim() || null
+      merged.opener = opener.trim() || null
+      merged.why_now = whyNow.map(s => s.trim()).filter(Boolean)
+      merged.rationale = rationale.map(s => s.trim()).filter(Boolean)
+    }
+    // `note` works for both rich (activator note) and stage-move shapes
+    merged.note = freeNote.trim() || null
+    return serializeStructuredNotes(merged)
+  }
+
+  const buildPayload = () => ({
+    action_type: actionType,
+    team,
+    contact_name: contactName.trim() || null,
+    outcome: outcome.trim() || null,
+    notes: buildNotes(),
+    assigned_name: name.trim() || null,
+    assigned_role: effectiveRole || null,
+  })
 
   const handleSave = async () => {
     setSubmitting(true)
     setError(null)
     try {
-      // Preserve any structured notes (stage_move or play activation) by merging
-      // the new `note` text back in. Legacy free-text notes save verbatim.
-      const nextNotes = structured
-        ? JSON.stringify({ ...structured, note: noteText })
-        : noteText
-
       const res = await fetch(`/api/actions/${action.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action_type: actionType,
-          team,
-          contact_name: contactName.trim() || null,
-          outcome: outcome.trim() || null,
-          notes: nextNotes,
-          assigned_name: name.trim() || null,
-          assigned_role: effectiveRole || null,
-        }),
+        body: JSON.stringify(buildPayload()),
       })
-      // The PATCH route currently only accepts a subset of fields; fall back
-      // to the ones that ARE accepted.
-      if (!res.ok) {
-        // Try a narrower PATCH with just the supported fields.
-        const fallbackRes = await fetch(`/api/actions/${action.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contact_name: contactName.trim() || null,
-            outcome: outcome.trim() || null,
-            notes: nextNotes,
-            assigned_name: name.trim() || null,
-            assigned_role: effectiveRole || null,
-          }),
-        })
-        const json = await fallbackRes.json()
-        if (!fallbackRes.ok) throw new Error(json.error ?? 'Save failed')
-        onSave(json.action)
-        return
-      }
       const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Save failed')
       onSave(json.action)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed')
@@ -113,28 +133,105 @@ export default function EditActionModal({ action, onClose, onSave }: Props) {
     }
   }
 
+  // "Save as new" — POSTs a new action with all the current form values,
+  // leaves the original row untouched. Useful for duplicating + editing a
+  // rich play-style action for a different stakeholder, without re-typing.
+  const handleSaveAsNew = async () => {
+    if (!onCreateNew) return
+    if (!name.trim()) { setError('Attribution name is required to create a new action.'); return }
+    setSubmitting(true)
+    setError(null)
+    try {
+      const payload = {
+        account_id: action.account_id,
+        performed_by: name.trim(),
+        ...buildPayload(),
+      }
+      const res = await fetch('/api/actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Create failed')
+      onCreateNew(json.action)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Create failed')
+      setSubmitting(false)
+    }
+  }
+
+  // Dynamic bullet list editor — one line per bullet.
+  const BulletList = ({ items, setItems, placeholder }: { items: string[]; setItems: (xs: string[]) => void; placeholder: string }) => (
+    <div className="space-y-2">
+      {items.length === 0 && (
+        <div className="text-xs text-gray-400 italic">No bullets yet. Click Add below.</div>
+      )}
+      {items.map((item, i) => (
+        <div key={i} className="flex items-start gap-2">
+          <span className="mt-2.5 w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: '#008CB9' }} />
+          <textarea
+            value={item}
+            onChange={e => {
+              const next = [...items]
+              next[i] = e.target.value
+              setItems(next)
+            }}
+            rows={2}
+            placeholder={placeholder}
+            className="flex-1 text-sm px-3 py-1.5 border rounded-md outline-none focus:border-[#008CB9] resize-vertical"
+            style={{ borderColor: 'var(--tulip-border)', fontFamily: 'inherit' }}
+          />
+          <button
+            type="button"
+            onClick={() => setItems(items.filter((_, idx) => idx !== i))}
+            aria-label="Remove bullet"
+            className="mt-1 p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => setItems([...items, ''])}
+        className="text-xs flex items-center gap-1 px-2 py-1 rounded border hover:bg-gray-50"
+        style={{ borderColor: 'var(--tulip-border)', color: 'var(--tulip-gray)' }}
+      >
+        <Plus size={12} /> Add bullet
+      </button>
+    </div>
+  )
+
   return (
     <div
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 100, padding: 20,
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        zIndex: 100, padding: '32px 20px 20px', overflowY: 'auto',
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          backgroundColor: 'white', borderRadius: 12, padding: 24,
-          maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto',
+          backgroundColor: 'white', borderRadius: 12,
+          maxWidth: 720, width: '100%',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+          display: 'flex', flexDirection: 'column',
         }}
       >
-        <div className="flex items-start justify-between mb-4">
+        <div className="px-6 pt-5 pb-3 flex items-start justify-between border-b" style={{ borderColor: 'var(--tulip-border)' }}>
           <div>
-            <h2 className="text-lg font-bold" style={{ color: '#00263E' }}>Edit action</h2>
+            <h2 className="text-lg font-bold" style={{ color: '#00263E' }}>
+              Edit action
+              {isRich && <span className="ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--tulip-celery)', color: 'var(--tulip-navy)' }}>Play-style</span>}
+              {isStageMove && <span className="ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: '#dbeafe', color: '#1e40af' }}>Stage move</span>}
+            </h2>
             <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-              Change anything about this action. Changes are visible to the team immediately.
+              {isRich
+                ? 'Every field shown on the card below is editable here. Save as new to clone this action for a different stakeholder.'
+                : 'Change anything about this action. Changes are visible to the team immediately.'}
             </p>
           </div>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded" aria-label="Close">
@@ -142,147 +239,129 @@ export default function EditActionModal({ action, onClose, onSave }: Props) {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Type</label>
-            <select
-              value={actionType}
-              onChange={e => setActionType(e.target.value as ActionType)}
-              className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9] bg-white"
-              style={{ borderColor: 'var(--tulip-border)' }}
+        <div className="px-6 py-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <Field label="Type">
+              <select value={actionType} onChange={e => setActionType(e.target.value as ActionType)} className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9] bg-white" style={{ borderColor: 'var(--tulip-border)' }}>
+                {ACTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </Field>
+            <Field label="Team">
+              <select value={team} onChange={e => setTeam(e.target.value as TeamType)} className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9] bg-white" style={{ borderColor: 'var(--tulip-border)' }}>
+                {TEAMS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </Field>
+          </div>
+
+          <Field label="Contact (optional)" className="mb-3">
+            <input type="text" value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Person this action was with" className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]" style={{ borderColor: 'var(--tulip-border)' }} />
+          </Field>
+
+          <Field label="Outcome (optional)" className="mb-4">
+            <input type="text" value={outcome} onChange={e => setOutcome(e.target.value)} placeholder="e.g. replied, meeting booked, declined" className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]" style={{ borderColor: 'var(--tulip-border)' }} />
+          </Field>
+
+          {/* Rich play-style section — only rendered when structured notes indicate play activation */}
+          {isRich && (
+            <div className="mb-5 pb-5 border-b" style={{ borderColor: 'var(--tulip-border)' }}>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-3">Play-style content</div>
+
+              <div className="grid grid-cols-1 gap-3 mb-3">
+                <Field label="Play name">
+                  <input type="text" value={playName} onChange={e => setPlayName(e.target.value)} className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]" style={{ borderColor: 'var(--tulip-border)' }} />
+                </Field>
+
+                <Field label="Target (person + title)">
+                  <input type="text" value={target} onChange={e => setTarget(e.target.value)} placeholder="Jodi Euerle Eddy, SVP, Enterprise Services and CIDO" className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]" style={{ borderColor: 'var(--tulip-border)' }} />
+                </Field>
+              </div>
+
+              <Field label="Why this person now" className="mb-3" hint="Bullets. Each line rendered as its own point on the card.">
+                <BulletList items={whyNow} setItems={setWhyNow} placeholder="Reason this stakeholder matters right now" />
+              </Field>
+
+              <Field label="Opener" className="mb-3" hint="First-person outreach opening. Gets rendered behind the Opener ▸ toggle on the card.">
+                <textarea value={opener} onChange={e => setOpener(e.target.value)} rows={5} className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9] resize-vertical" style={{ borderColor: 'var(--tulip-border)', fontFamily: 'inherit' }} />
+              </Field>
+
+              <Field label="Rationale" className="mb-1" hint="Why this is the right play. Bullets.">
+                <BulletList items={rationale} setItems={setRationale} placeholder="Strategic rationale bullet" />
+              </Field>
+            </div>
+          )}
+
+          <Field label={structuredBase ? 'Activator note (internal)' : 'Notes'} className="mb-4" hint={structuredBase ? 'Optional note from whoever logged or activated this — separate from the opener above.' : undefined}>
+            <textarea value={freeNote} onChange={e => setFreeNote(e.target.value)} rows={3} className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9] resize-vertical" style={{ borderColor: 'var(--tulip-border)', fontFamily: 'inherit' }} />
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <Field label={<>Attributed to <span className="text-red-500">*</span></>}>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]" style={{ borderColor: 'var(--tulip-border)' }} />
+            </Field>
+            <Field label="Role">
+              <select value={rolePreset} onChange={e => { setRolePreset(e.target.value); if (e.target.value !== 'Other') setCustomRole('') }} className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9] bg-white" style={{ borderColor: 'var(--tulip-border)' }}>
+                <option value="">None</option>
+                {STAKEHOLDER_ROLE_PRESETS.map(r => <option key={r} value={r}>{r}</option>)}
+                <option value="Other">Other… (type it in)</option>
+              </select>
+            </Field>
+          </div>
+          {rolePreset === 'Other' && (
+            <Field label="Custom role" className="mb-3">
+              <input type="text" value={customRole} onChange={e => setCustomRole(e.target.value)} placeholder="e.g. VP Revenue Operations, Solutions Engineer" className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]" style={{ borderColor: 'var(--tulip-border)' }} autoFocus />
+            </Field>
+          )}
+
+          {error && (
+            <div className="mb-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+              {error}
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t flex items-center justify-between gap-2" style={{ borderColor: 'var(--tulip-border)' }}>
+          {onCreateNew ? (
+            <button
+              type="button"
+              onClick={handleSaveAsNew}
+              disabled={submitting || !name.trim()}
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-md border hover:bg-gray-50"
+              style={{ borderColor: 'var(--tulip-border)', color: 'var(--tulip-navy)' }}
+              title="Create a new action with all these field values, leaving the original unchanged"
             >
-              {ACTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Team</label>
-            <select
-              value={team}
-              onChange={e => setTeam(e.target.value as TeamType)}
-              className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9] bg-white"
-              style={{ borderColor: 'var(--tulip-border)' }}
-            >
-              {TEAMS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-          </div>
-        </div>
+              <CopyPlus size={14} /> Save as new action
+            </button>
+          ) : <span />}
 
-        <div className="mb-3">
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Contact (optional)</label>
-          <input
-            type="text"
-            value={contactName}
-            onChange={e => setContactName(e.target.value)}
-            placeholder="Person this action was with"
-            className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]"
-            style={{ borderColor: 'var(--tulip-border)' }}
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Outcome (optional)</label>
-          <input
-            type="text"
-            value={outcome}
-            onChange={e => setOutcome(e.target.value)}
-            placeholder="e.g. replied, meeting booked, declined"
-            className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]"
-            style={{ borderColor: 'var(--tulip-border)' }}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
-            {structured ? 'Note (the original play/stage context is preserved)' : 'Notes'}
-          </label>
-          <textarea
-            value={noteText}
-            onChange={e => setNoteText(e.target.value)}
-            rows={4}
-            className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9] resize-vertical"
-            style={{ borderColor: 'var(--tulip-border)' }}
-          />
-        </div>
-
-        {/* Name + role */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
-              Attributed to <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]"
-              style={{ borderColor: 'var(--tulip-border)' }}
-            />
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={onClose} disabled={submitting}
+              className="text-sm px-4 py-2 rounded-md border hover:bg-gray-50"
+              style={{ borderColor: 'var(--tulip-border)', color: 'var(--tulip-gray)' }}>
+              Cancel
+            </button>
+            <button type="button" onClick={handleSave} disabled={submitting || !name.trim()}
+              className="text-sm font-semibold px-4 py-2 rounded-md"
+              style={{
+                backgroundColor: name.trim() ? '#00263E' : '#94a3b8',
+                color: 'white',
+                opacity: submitting ? 0.7 : 1,
+                cursor: submitting ? 'not-allowed' : 'pointer',
+              }}>
+              {submitting ? 'Saving…' : 'Save changes'}
+            </button>
           </div>
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Role</label>
-            <select
-              value={rolePreset}
-              onChange={e => {
-                setRolePreset(e.target.value)
-                if (e.target.value !== 'Other') setCustomRole('')
-              }}
-              className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9] bg-white"
-              style={{ borderColor: 'var(--tulip-border)' }}
-            >
-              <option value="">None</option>
-              {STAKEHOLDER_ROLE_PRESETS.map(r => <option key={r} value={r}>{r}</option>)}
-              <option value="Other">Other… (type it in)</option>
-            </select>
-          </div>
-        </div>
-        {rolePreset === 'Other' && (
-          <div className="mb-4">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Custom role</label>
-            <input
-              type="text"
-              value={customRole}
-              onChange={e => setCustomRole(e.target.value)}
-              placeholder="e.g. VP Revenue Operations, Solutions Engineer"
-              className="w-full text-sm px-3 py-2 border rounded-md outline-none focus:border-[#008CB9]"
-              style={{ borderColor: 'var(--tulip-border)' }}
-              autoFocus
-            />
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-            {error}
-          </div>
-        )}
-
-        <div className="flex items-center justify-end gap-2 mt-2">
-          <button type="button" onClick={onClose} disabled={submitting}
-            className="text-sm px-4 py-2 rounded-md border hover:bg-gray-50"
-            style={{ borderColor: 'var(--tulip-border)', color: 'var(--tulip-gray)' }}>
-            Cancel
-          </button>
-          <button type="button" onClick={handleSave} disabled={submitting || !name.trim()}
-            className="text-sm font-semibold px-4 py-2 rounded-md"
-            style={{
-              backgroundColor: name.trim() ? '#00263E' : '#94a3b8',
-              color: 'white',
-              opacity: submitting ? 0.7 : 1,
-              cursor: submitting ? 'not-allowed' : 'pointer',
-            }}>
-            {submitting ? 'Saving…' : 'Save changes'}
-          </button>
         </div>
       </div>
     </div>
   )
 }
 
-function safeParse(raw: string | null): { note?: string; [key: string]: unknown } | null {
-  if (!raw) return null
-  try {
-    const parsed = JSON.parse(raw)
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed
-  } catch { /* not JSON */ }
-  return null
+function Field({ label, hint, className, children }: { label: React.ReactNode; hint?: string; className?: string; children: React.ReactNode }) {
+  return (
+    <div className={className}>
+      <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">{label}</label>
+      {children}
+      {hint && <div className="text-[11px] text-gray-400 mt-1">{hint}</div>}
+    </div>
+  )
 }

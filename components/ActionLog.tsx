@@ -58,6 +58,7 @@ export default function ActionLog({
   const [submitting, setSubmitting] = useState(false)
   const [interactionStage, setInteractionStage] = useState<InteractionStage | null>(initialInteractionStage ?? 'prospecting')
   const [modalMode, setModalMode] = useState<'log' | 'advance' | 'edit' | null>(null)
+  const [createRichAction, setCreateRichAction] = useState(false)
   const [savedToast, setSavedToast] = useState<string | null>(null)
   const [form, setForm] = useState({
     action_type: 'email' as ActionType,
@@ -294,6 +295,49 @@ export default function ActionLog({
         </div>
       )}
 
+      {/* "+ Add new action" — opens the full rich-field editor (same fields
+          as the card shows: target, why_now, opener, rationale). Sits between
+          the interactions-logged panel and the action feed itself so it's
+          discoverable right where the user expects to add something new. */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setCreateRichAction(true)}
+          className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-lg border hover:bg-gray-50 transition-colors"
+          style={{ borderColor: 'var(--tulip-navy)', color: 'var(--tulip-navy)', backgroundColor: 'white' }}
+          title="Create a new action with the full play-style field set"
+        >
+          <Plus className="w-3.5 h-3.5" strokeWidth={3} /> Add new action
+        </button>
+      </div>
+
+      {createRichAction && (
+        <EditActionModal
+          mode="create"
+          action={{
+            id: '__new__',
+            account_id: accountId,
+            action_type: 'email',
+            performed_by: '',
+            contact_name: null,
+            outcome: 'pending',
+            notes: JSON.stringify({ play_name: '', target: '', opener: '', why_now: [], rationale: [] }),
+            team: 'sales',
+            assigned_name: null,
+            assigned_role: null,
+            created_at: new Date().toISOString(),
+          } as AccountAction}
+          onClose={() => setCreateRichAction(false)}
+          onSave={() => { /* create mode uses onCreateNew */ }}
+          onCreateNew={created => {
+            setActions(prev => [created, ...prev])
+            setCreateRichAction(false)
+            setSavedToast('New action added to the feed.')
+            setTimeout(() => setSavedToast(null), 4500)
+          }}
+        />
+      )}
+
       {/* Action feed */}
       {actions.length === 0 && !showForm ? (
         <div className="bg-white border rounded-xl p-12 text-center text-gray-400">
@@ -490,23 +534,8 @@ function ActionCard({
   }
 
   return (
-    <div className="bg-white border rounded-lg p-4 flex items-start gap-3 relative group">
+    <div className="bg-white border rounded-lg p-4 flex items-start gap-3 relative">
       <div className="p-2 rounded-lg bg-gray-100 text-gray-600 shrink-0">{icon}</div>
-
-      {/* Edit (pencil) — opens full-field edit modal. Left of delete, same behavior: shows on hover */}
-      <div className="absolute top-2 right-10 z-10">
-        {!confirmingDelete && (
-          <button
-            type="button"
-            onClick={() => setEditingFull(true)}
-            title="Edit this action"
-            aria-label="Edit action"
-            className="p-1.5 rounded text-gray-300 opacity-0 group-hover:opacity-100 hover:text-[#008CB9] hover:bg-sky-50 transition-all"
-          >
-            <Pencil size={13} />
-          </button>
-        )}
-      </div>
 
       {editingFull && (
         <EditActionModal
@@ -523,9 +552,10 @@ function ActionCard({
         />
       )}
 
-      {/* Delete control — two-stage confirm with stage-rollback context if applicable */}
-      <div className="absolute top-2 right-2 z-10">
-        {confirmingDelete ? (
+      {/* Confirm-delete overlay — keeps absolute positioning because it's
+          wider than the inline button cluster and needs to float over content. */}
+      {confirmingDelete && (
+        <div className="absolute top-2 right-2 z-20">
           <div
             className="bg-white border rounded-lg shadow-lg p-3"
             style={{ borderColor: '#fca5a5', maxWidth: 340 }}
@@ -568,22 +598,10 @@ function ActionCard({
               </button>
             </div>
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={armDelete}
-            title={stageMove
-              ? `Delete this action (will roll stage back to ${prettyStage(stageMove.from_stage)})`
-              : 'Delete this action'}
-            aria-label="Delete action"
-            className="p-1.5 rounded text-gray-300 opacity-0 group-hover:opacity-100 hover:text-red-600 hover:bg-red-50 transition-all"
-          >
-            <Trash2 size={13} />
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="flex-1 min-w-0 pr-8">
+      <div className="flex-1 min-w-0">
         {/* Stage-move badge — shown when this action moved the interaction stage */}
         {stageMove && (
           <div className="mb-2 rounded-md px-2.5 py-1 inline-flex items-center gap-1.5 text-[11px] font-semibold"
@@ -707,7 +725,38 @@ function ActionCard({
           action.notes && <ActionNotesRendered notes={action.notes} />
         )}
       </div>
-      <span className="text-xs text-gray-400 shrink-0">{timeAgo(action.created_at)}</span>
+      {/* Right-side column: timestamp stacked above Edit + Delete buttons.
+          Always visible (not hover-reveal) so the controls are discoverable on
+          touch devices and don't overlap the timestamp. The confirm-delete
+          popup renders as a separate absolute overlay above this cluster so it
+          can be wider than the column without squashing the card content. */}
+      <div className="flex flex-col items-end gap-1.5 shrink-0 self-start">
+        <span className="text-xs text-gray-400 whitespace-nowrap">{timeAgo(action.created_at)}</span>
+        {!confirmingDelete && (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setEditingFull(true)}
+              title="Edit this action"
+              aria-label="Edit action"
+              className="p-1.5 rounded text-gray-400 hover:text-[#008CB9] hover:bg-sky-50 transition-colors"
+            >
+              <Pencil size={13} />
+            </button>
+            <button
+              type="button"
+              onClick={armDelete}
+              title={stageMove
+                ? `Delete this action (will roll stage back to ${prettyStage(stageMove.from_stage)})`
+                : 'Delete this action'}
+              aria-label="Delete action"
+              className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

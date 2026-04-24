@@ -38,6 +38,10 @@ interface Props {
   // Fired when user clicks "Save as new action" — spawns a POST /api/actions
   // with the currently-edited values, leaves the original intact.
   onCreateNew?: (created: AccountAction) => void
+  // When true, the modal is in "create from scratch" mode — primary Save
+  // button POSTs a new action instead of PATCH-ing the template. Used by
+  // the "+ Add new action" button above the interaction list.
+  mode?: 'edit' | 'create'
 }
 
 // Full-field editor for an existing action. Detects whether the action has
@@ -45,10 +49,13 @@ interface Props {
 // / target / play_name) and renders per-field editors when it does — so the
 // fields shown match the fields rendered on the card. Plain-text notes fall
 // back to a single textarea.
-export default function EditActionModal({ action, onClose, onSave, onCreateNew }: Props) {
+export default function EditActionModal({ action, onClose, onSave, onCreateNew, mode = 'edit' }: Props) {
+  const isCreate = mode === 'create'
   const structuredBase = useMemo(() => parseStructuredNotes(action.notes), [action.notes])
-  const isRich = isRichPlayNote(structuredBase)
-  const isStageMove = isStageMoveNote(structuredBase)
+  // In create mode, force rich-field editing so the user gets opener/why_now/
+  // rationale inputs even when the template starts empty.
+  const isRich = isCreate ? true : isRichPlayNote(structuredBase)
+  const isStageMove = isCreate ? false : isStageMoveNote(structuredBase)
 
   // ---- Base action fields (always editable) ----
   const [actionType, setActionType] = useState<ActionType>(action.action_type)
@@ -116,6 +123,11 @@ export default function EditActionModal({ action, onClose, onSave, onCreateNew }
   })
 
   const handleSave = async () => {
+    if (isCreate) {
+      // In create mode, the primary Save button spawns a new action via POST.
+      await handleSaveAsNew()
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
@@ -224,14 +236,16 @@ export default function EditActionModal({ action, onClose, onSave, onCreateNew }
         <div className="px-6 pt-5 pb-3 flex items-start justify-between border-b" style={{ borderColor: 'var(--tulip-border)' }}>
           <div>
             <h2 className="text-lg font-bold" style={{ color: '#00263E' }}>
-              Edit action
-              {isRich && <span className="ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--tulip-celery)', color: 'var(--tulip-navy)' }}>Play-style</span>}
+              {isCreate ? 'Add new action' : 'Edit action'}
+              {isRich && !isCreate && <span className="ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--tulip-celery)', color: 'var(--tulip-navy)' }}>Play-style</span>}
               {isStageMove && <span className="ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: '#dbeafe', color: '#1e40af' }}>Stage move</span>}
             </h2>
             <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-              {isRich
-                ? 'Every field shown on the card below is editable here. Save as new to clone this action for a different stakeholder.'
-                : 'Change anything about this action. Changes are visible to the team immediately.'}
+              {isCreate
+                ? 'Creates a brand-new action on this account, visible to everyone on your team. Fill in the play-style fields for a rich action, or just Type + Attribution for a quick log.'
+                : isRich
+                  ? 'Every field shown on the card below is editable here. Save as new to clone this action for a different stakeholder.'
+                  : 'Change anything about this action. Changes are visible to the team immediately.'}
             </p>
           </div>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded" aria-label="Close">
@@ -320,7 +334,10 @@ export default function EditActionModal({ action, onClose, onSave, onCreateNew }
         </div>
 
         <div className="px-6 py-4 border-t flex items-center justify-between gap-2" style={{ borderColor: 'var(--tulip-border)' }}>
-          {onCreateNew ? (
+          {/* "Save as new" button only makes sense in edit mode (creating a
+              sibling of an existing action). In create mode, the primary
+              Save button already POSTs. */}
+          {!isCreate && onCreateNew ? (
             <button
               type="button"
               onClick={handleSaveAsNew}
@@ -347,7 +364,7 @@ export default function EditActionModal({ action, onClose, onSave, onCreateNew }
                 opacity: submitting ? 0.7 : 1,
                 cursor: submitting ? 'not-allowed' : 'pointer',
               }}>
-              {submitting ? 'Saving…' : 'Save changes'}
+              {submitting ? 'Saving…' : (isCreate ? 'Create action' : 'Save changes')}
             </button>
           </div>
         </div>

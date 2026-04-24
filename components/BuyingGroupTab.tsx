@@ -70,6 +70,10 @@ export default function BuyingGroupTab({ contacts, accountId, accountName }: Pro
   const blockers = contacts.filter(c => c.persona_type === 'Blocker')
   const endUsers = contacts.filter(c => c.persona_type === 'End User')
   const unassigned = contacts.filter(c => c.persona_type === 'Unassigned')
+  // Any custom persona_type string lands in the "Other" bucket — rendered
+  // alongside Unassigned below the classical tiers.
+  const KNOWN_PERSONAS = new Set(['Champion', 'Economic Buyer', 'Technical Evaluator', 'End User', 'Blocker', 'Unassigned'])
+  const custom = contacts.filter(c => !KNOWN_PERSONAS.has(c.persona_type))
 
   // Starter-role suggestions shown only when that role has zero contacts.
   // Not a hard cap — an AE can add as many contacts as needed via the
@@ -143,9 +147,10 @@ export default function BuyingGroupTab({ contacts, accountId, accountName }: Pro
                 {endUsers.map((c, i) => <PersonaNode key={c.id} contact={c} index={i + economicBuyers.length + champions.length + technicals.length + blockers.length} size="sm" />)}
               </div>
             )}
-            {unassigned.length > 0 && (
+            {(unassigned.length > 0 || custom.length > 0) && (
               <div className="flex items-start gap-8 justify-center flex-wrap pt-2 border-t border-dashed border-amber-200 mt-2 w-full">
                 {unassigned.map((c, i) => <PersonaNode key={c.id} contact={c} index={i + economicBuyers.length + champions.length + technicals.length + blockers.length + endUsers.length} size="sm" />)}
+                {custom.map((c, i) => <PersonaNode key={c.id} contact={c} index={i + economicBuyers.length + champions.length + technicals.length + blockers.length + endUsers.length + unassigned.length} size="sm" />)}
               </div>
             )}
           </div>
@@ -645,25 +650,40 @@ function ManualContactModal({
   )
 }
 
-// Shared persona-type dropdown used by both Add and Edit modals so the
-// classification logic stays in one place. Options are sourced from
-// PERSONA_OPTIONS at the top of this file.
+// Shared persona-type combobox used by both Add and Edit modals. The 6
+// classical values (PERSONA_OPTIONS) are surfaced as preset suggestions via
+// a datalist — browser autocompletes them as you type, but any custom string
+// is accepted and saved. Enterprise buying groups often produce stakeholder
+// labels that don't fit the classical taxonomy ("Plant GM EMEA", "Procurement
+// Gatekeeper", "Strategic Advisor"); free text honors that.
 function PersonaTypeSelect({ value, onChange, className }: { value: string; onChange: (v: string) => void; className?: string }) {
+  const isPreset = PERSONA_OPTIONS.some(o => o.value === value)
+  const datalistId = 'persona-type-presets'
   return (
     <div className={className}>
       <label className="text-xs text-gray-600 font-semibold block mb-1">Buying-group role</label>
-      <select
+      <input
+        type="text"
         value={value}
         onChange={e => onChange(e.target.value)}
+        list={datalistId}
+        placeholder="Champion, Economic Buyer, or type your own (e.g. Plant GM EMEA)"
+        maxLength={120}
         className="w-full text-sm px-3 py-2 border rounded outline-none bg-white"
-      >
+      />
+      <datalist id={datalistId}>
         {PERSONA_OPTIONS.map(o => (
-          <option key={o.value} value={o.value}>{o.label} — {o.hint}</option>
+          <option key={o.value} value={o.value}>{o.hint}</option>
         ))}
-      </select>
+      </datalist>
       {value === 'Unassigned' && (
         <div className="text-[11px] text-amber-700 mt-1">
           You can reclassify this person later via the Edit button on their card.
+        </div>
+      )}
+      {value && !isPreset && (
+        <div className="text-[11px] text-gray-500 mt-1">
+          Custom role — the 6 classical labels (Champion, Economic Buyer, Technical Evaluator, End User, Blocker, Unassigned) are just suggestions. Whatever you type saves to the database.
         </div>
       )}
     </div>

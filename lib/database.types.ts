@@ -13,7 +13,12 @@ export type InteractionStage =
   | 'expansion'
   | 'renewal'
   | 'closed_lost'
-export type PersonaType = 'Champion' | 'Economic Buyer' | 'Technical Evaluator' | 'End User' | 'Blocker' | 'Unassigned'
+// Persona type is now free-text. The classical 6 values below are surfaced
+// as preset suggestions in the UI combobox, but any custom label (e.g.
+// "Strategic Advisor", "Procurement Gatekeeper", "Plant GM Europe") is a
+// valid persistable value as of 2026-04-24_contacts_persona_freetext.sql.
+export type PersonaType = string
+export const PERSONA_TYPE_PRESETS = ['Champion', 'Economic Buyer', 'Technical Evaluator', 'End User', 'Blocker', 'Unassigned'] as const
 export type SignalType = 'intent' | 'engagement' | 'news' | 'firmographic' | 'product_usage'
 export type SignalSentiment = 'positive' | 'neutral' | 'negative'
 export type ActionType = 'email' | 'call' | 'meeting' | 'linkedin' | 'event' | 'content_send' | 'demo' | 'proposal' | 'other'

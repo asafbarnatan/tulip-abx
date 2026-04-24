@@ -130,7 +130,9 @@
       "Bash(git commit -m 'feat\\(agent\\): expand verified Tulip customer roster *)",
       "Bash(git commit -m 'feat\\(plays\\): edit, add, and remove custom plays per account *)",
       "Bash(git commit -m 'fix\\(actions\\): rich-field edit modal matches displayed card content *)",
-      "Bash(git commit -m 'fix\\(actions\\): control cluster layout + + Add new action button *)"
+      "Bash(git commit -m 'fix\\(actions\\): control cluster layout + + Add new action button *)",
+      "Bash(git commit -m 'fix\\(signals\\): always-visible delete button *)",
+      "Bash(git commit -m 'feat\\(buying-group\\): Unassigned persona + Add-contact always available *)"
     ]
   }
 }

@@ -12,12 +12,27 @@ const PERSONA_CONFIG: Record<string, { color: string; description: string }> = {
   'Technical Evaluator':{ color: 'bg-purple-100 text-purple-800',description: 'Evaluates technical fit and integration' },
   'End User':           { color: 'bg-gray-100 text-gray-700',    description: 'Frontline operator or team using the platform' },
   'Blocker':            { color: 'bg-red-100 text-red-800',      description: 'Creates friction — needs to be addressed' },
+  'Unassigned':         { color: 'bg-amber-50 text-amber-800 border border-amber-200', description: 'Role to be determined — classify when you know more' },
 }
+
+// All valid persona options, in display order. Surfaced as a dropdown in the
+// Add/Edit contact modals so the person entering data can pick (or leave as
+// Unassigned to decide later).
+const PERSONA_OPTIONS: Array<{ value: string; label: string; hint: string }> = [
+  { value: 'Unassigned',         label: 'Unassigned',          hint: 'Decide later when you know more about the person' },
+  { value: 'Champion',           label: 'Champion',            hint: 'Internal advocate driving buy-in' },
+  { value: 'Economic Buyer',     label: 'Economic Buyer',      hint: 'Controls budget and final sign-off' },
+  { value: 'Technical Evaluator',label: 'Technical Evaluator', hint: 'Evaluates technical fit and integration' },
+  { value: 'End User',           label: 'End User',            hint: 'Frontline operator or team using the platform' },
+  { value: 'Blocker',            label: 'Blocker',             hint: 'Creates friction — must be addressed' },
+]
 
 const AVATAR_COLORS = ['#00263E', '#008CB9', '#7c3aed', '#059669', '#d97706']
 
-// Roles that every Tier-1 enterprise buying group ideally has filled
-const EXPECTED_ROLES: Array<{ persona_type: string; suggested_title: string }> = [
+// Starter role suggestions shown when the map is sparse — NOT a cap or target.
+// Real enterprise buying groups routinely include 10+ stakeholders; these are
+// just useful prompts for the first few adds.
+const SUGGESTED_STARTER_ROLES: Array<{ persona_type: string; suggested_title: string }> = [
   { persona_type: 'Economic Buyer',       suggested_title: 'VP / SVP Operations, Quality, or Manufacturing' },
   { persona_type: 'Champion',             suggested_title: 'Head of Digital Transformation / Smart Manufacturing' },
   { persona_type: 'Technical Evaluator',  suggested_title: 'IT Director, Quality Systems Lead, or CISO' },
@@ -54,30 +69,58 @@ export default function BuyingGroupTab({ contacts, accountId, accountName }: Pro
   const technicals = contacts.filter(c => c.persona_type === 'Technical Evaluator')
   const blockers = contacts.filter(c => c.persona_type === 'Blocker')
   const endUsers = contacts.filter(c => c.persona_type === 'End User')
+  const unassigned = contacts.filter(c => c.persona_type === 'Unassigned')
 
-  // Identify which expected roles have ZERO real contacts
+  // Starter-role suggestions shown only when that role has zero contacts.
+  // Not a hard cap — an AE can add as many contacts as needed via the
+  // persistent "+ Add contact" button at the top of the tab.
   const filledPersonaTypes = new Set<string>(contacts.map(c => c.persona_type))
-  const unfilledRoles = EXPECTED_ROLES.filter(r => !filledPersonaTypes.has(r.persona_type))
+  const starterSuggestions = SUGGESTED_STARTER_ROLES.filter(r => !filledPersonaTypes.has(r.persona_type))
 
   return (
     <div className="space-y-4">
       {/* Data integrity banner */}
-      <div className="rounded-lg px-4 py-2.5 flex items-start gap-2" style={{ backgroundColor: '#e8f5f9', borderLeft: '3px solid #008CB9' }}>
-        <Sparkles className="w-4 h-4 mt-0.5" style={{ color: '#008CB9' }} />
-        <div>
-          <div className="text-xs font-semibold" style={{ color: '#00263E' }}>Zero-fabrication buying group</div>
-          <div className="text-xs text-gray-600 mt-0.5">
-            Every contact below is a real, publicly-verifiable executive — click the source link on any card to view their public profile.
-            Unfilled roles show 4 ways to source a real person: Agent Research, Salesforce, ZoomInfo, or manual entry.
+      <div className="rounded-lg px-4 py-2.5 flex items-start justify-between gap-3" style={{ backgroundColor: '#e8f5f9', borderLeft: '3px solid #008CB9' }}>
+        <div className="flex items-start gap-2 flex-1 min-w-0">
+          <Sparkles className="w-4 h-4 mt-0.5 shrink-0" style={{ color: '#008CB9' }} />
+          <div>
+            <div className="text-xs font-semibold" style={{ color: '#00263E' }}>Zero-fabrication buying group</div>
+            <div className="text-xs text-gray-600 mt-0.5">
+              Every contact is a real, publicly-verifiable person. Large enterprise deals routinely include 10+ stakeholders — add anyone relevant, not just the classical 5 roles. Role can be Unassigned at add-time and classified later.
+            </div>
           </div>
         </div>
+        {accountId && (
+          <button
+            onClick={() => setManualTarget({ persona_type: 'Unassigned' })}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md shrink-0"
+            style={{ backgroundColor: '#00263E', color: '#F2EEA1' }}
+            title="Add any stakeholder — role is optional and can be set now or later"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            Add contact
+          </button>
+        )}
       </div>
 
       {/* Influence map */}
       <div className="bg-white border rounded-xl p-6">
         <h3 className="font-semibold mb-1" style={{ color: '#00263E' }}>Buying Group Map</h3>
         <p className="text-sm text-gray-500 mb-5">
-          {contacts.length} verified stakeholder{contacts.length !== 1 ? 's' : ''}: {economicBuyers.length} economic buyer{economicBuyers.length !== 1 ? 's' : ''}, {champions.length} champion{champions.length !== 1 ? 's' : ''}, {technicals.length} technical evaluator{technicals.length !== 1 ? 's' : ''}, {endUsers.length} end user{endUsers.length !== 1 ? 's' : ''}{blockers.length > 0 ? `, ${blockers.length} blocker${blockers.length > 1 ? 's' : ''}` : ''}
+          {contacts.length} stakeholder{contacts.length !== 1 ? 's' : ''} mapped
+          {contacts.length > 0 && (
+            <>
+              {' — '}
+              {[
+                economicBuyers.length && `${economicBuyers.length} economic buyer${economicBuyers.length !== 1 ? 's' : ''}`,
+                champions.length && `${champions.length} champion${champions.length !== 1 ? 's' : ''}`,
+                technicals.length && `${technicals.length} technical evaluator${technicals.length !== 1 ? 's' : ''}`,
+                endUsers.length && `${endUsers.length} end user${endUsers.length !== 1 ? 's' : ''}`,
+                blockers.length && `${blockers.length} blocker${blockers.length !== 1 ? 's' : ''}`,
+                unassigned.length && `${unassigned.length} unassigned`,
+              ].filter(Boolean).join(', ')}
+            </>
+          )}
         </p>
 
         {contacts.length > 0 && (
@@ -98,6 +141,11 @@ export default function BuyingGroupTab({ contacts, accountId, accountName }: Pro
               <div className="flex items-start gap-8 justify-center flex-wrap">
                 {blockers.map((c, i) => <PersonaNode key={c.id} contact={c} index={i + economicBuyers.length + champions.length + technicals.length} size="sm" />)}
                 {endUsers.map((c, i) => <PersonaNode key={c.id} contact={c} index={i + economicBuyers.length + champions.length + technicals.length + blockers.length} size="sm" />)}
+              </div>
+            )}
+            {unassigned.length > 0 && (
+              <div className="flex items-start gap-8 justify-center flex-wrap pt-2 border-t border-dashed border-amber-200 mt-2 w-full">
+                {unassigned.map((c, i) => <PersonaNode key={c.id} contact={c} index={i + economicBuyers.length + champions.length + technicals.length + blockers.length + endUsers.length} size="sm" />)}
               </div>
             )}
           </div>
@@ -223,15 +271,18 @@ export default function BuyingGroupTab({ contacts, accountId, accountName }: Pro
         </div>
       )}
 
-      {/* EMPTY SLOTS — the magic section. 4 options per unfilled role. */}
-      {unfilledRoles.length > 0 && (
+      {/* Starter suggestions — shown only when a classical role is empty.
+          This is NOT a quota or goal; large deals often exceed these. The
+          persistent "+ Add contact" button above lets AEs add anyone,
+          including unclassified people. */}
+      {starterSuggestions.length > 0 && (
         <div className="bg-white border rounded-xl p-6" style={{ borderStyle: 'dashed', borderColor: '#D0DBE6', borderWidth: 2 }}>
-          <h3 className="font-semibold mb-1" style={{ color: '#00263E' }}>Unfilled buying group roles</h3>
+          <h3 className="font-semibold mb-1" style={{ color: '#00263E' }}>Starter role suggestions</h3>
           <p className="text-sm text-gray-500 mb-4">
-            {unfilledRoles.length} role{unfilledRoles.length > 1 ? 's' : ''} not yet mapped. Pick how to source a real person — no synthetic personas allowed.
+            Classical buying-group roles that tend to show up in enterprise deals. Not a checklist — add anyone relevant via the <strong>Add contact</strong> button above, whether they fit these suggestions or not.
           </p>
           <div className="space-y-3">
-            {unfilledRoles.map(role => (
+            {starterSuggestions.map(role => (
               <div key={role.persona_type} className="border rounded-lg p-4" style={{ backgroundColor: '#F8FBFD' }}>
                 <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                   <div>
@@ -519,7 +570,7 @@ function AgentResearchModal({
 // Manual Contact Modal
 // ───────────────────────────────────────────────────────────────────────
 function ManualContactModal({
-  accountId, personaType, onClose, onSaved,
+  accountId, personaType: initialPersonaType, onClose, onSaved,
 }: {
   accountId: string
   personaType: string
@@ -528,6 +579,10 @@ function ManualContactModal({
 }) {
   const [name, setName] = useState('')
   const [title, setTitle] = useState('')
+  // Persona type is editable in the modal — initialPersonaType is a seed
+  // (the slot the user clicked Add from, or 'Unassigned' for the top-level
+  // "+ Add contact" button). The user can override before saving.
+  const [personaType, setPersonaType] = useState(initialPersonaType)
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
@@ -564,11 +619,12 @@ function ManualContactModal({
       <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: 10, padding: 24, maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="flex items-start justify-between mb-3">
           <div>
-            <h2 className="text-base font-bold" style={{ color: '#00263E' }}>Add {personaType} manually</h2>
-            <p className="text-xs text-gray-500 mt-1">Only add real people. Include a source URL.</p>
+            <h2 className="text-base font-bold" style={{ color: '#00263E' }}>Add contact</h2>
+            <p className="text-xs text-gray-500 mt-1">Real people only. Role is optional at add-time — classify later from the Edit button on the contact card.</p>
           </div>
           <button onClick={onClose} className="text-xl text-gray-400 hover:text-gray-700 leading-none">×</button>
         </div>
+        <PersonaTypeSelect value={personaType} onChange={setPersonaType} className="mb-2" />
         <ContactFormFields
           name={name} setName={setName}
           title={title} setTitle={setTitle}
@@ -589,6 +645,31 @@ function ManualContactModal({
   )
 }
 
+// Shared persona-type dropdown used by both Add and Edit modals so the
+// classification logic stays in one place. Options are sourced from
+// PERSONA_OPTIONS at the top of this file.
+function PersonaTypeSelect({ value, onChange, className }: { value: string; onChange: (v: string) => void; className?: string }) {
+  return (
+    <div className={className}>
+      <label className="text-xs text-gray-600 font-semibold block mb-1">Buying-group role</label>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full text-sm px-3 py-2 border rounded outline-none bg-white"
+      >
+        {PERSONA_OPTIONS.map(o => (
+          <option key={o.value} value={o.value}>{o.label} — {o.hint}</option>
+        ))}
+      </select>
+      {value === 'Unassigned' && (
+        <div className="text-[11px] text-amber-700 mt-1">
+          You can reclassify this person later via the Edit button on their card.
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ───────────────────────────────────────────────────────────────────────
 // Edit Contact Modal — same fields as ManualContactModal but PATCHes
 // ───────────────────────────────────────────────────────────────────────
@@ -602,6 +683,9 @@ function EditContactModal({
 }) {
   const [name, setName] = useState(contact.name)
   const [title, setTitle] = useState(contact.title)
+  // Persona type is editable — this is the "classify later" path for people
+  // who were added as Unassigned, plus a way to correct role mis-classifications.
+  const [personaType, setPersonaType] = useState(contact.persona_type as string)
   const [email, setEmail] = useState(contact.email ?? '')
   const [phone, setPhone] = useState(contact.phone ?? '')
   const [linkedinUrl, setLinkedinUrl] = useState(contact.linkedin_url && contact.linkedin_url.includes('linkedin.com') ? contact.linkedin_url : '')
@@ -618,6 +702,7 @@ function EditContactModal({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name, title,
+        persona_type: personaType,
         email: email || null,
         phone: phone || null,
         linkedin_url: linkedinUrl || null,
@@ -635,10 +720,11 @@ function EditContactModal({
         <div className="flex items-start justify-between mb-3">
           <div>
             <h2 className="text-base font-bold" style={{ color: '#00263E' }}>Edit contact</h2>
-            <p className="text-xs text-gray-500 mt-1">{contact.persona_type}</p>
+            <p className="text-xs text-gray-500 mt-1">Change the role, contact details, or pain signals.</p>
           </div>
           <button onClick={onClose} className="text-xl text-gray-400 hover:text-gray-700 leading-none">×</button>
         </div>
+        <PersonaTypeSelect value={personaType} onChange={setPersonaType} className="mb-2" />
         <ContactFormFields
           name={name} setName={setName}
           title={title} setTitle={setTitle}

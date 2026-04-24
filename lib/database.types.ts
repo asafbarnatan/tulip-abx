@@ -13,7 +13,7 @@ export type InteractionStage =
   | 'expansion'
   | 'renewal'
   | 'closed_lost'
-export type PersonaType = 'Champion' | 'Economic Buyer' | 'Technical Evaluator' | 'End User' | 'Blocker'
+export type PersonaType = 'Champion' | 'Economic Buyer' | 'Technical Evaluator' | 'End User' | 'Blocker' | 'Unassigned'
 export type SignalType = 'intent' | 'engagement' | 'news' | 'firmographic' | 'product_usage'
 export type SignalSentiment = 'positive' | 'neutral' | 'negative'
 export type ActionType = 'email' | 'call' | 'meeting' | 'linkedin' | 'event' | 'content_send' | 'demo' | 'proposal' | 'other'

@@ -379,7 +379,7 @@ function SignalCard({ signal, onDelete }: { signal: Signal; onDelete: (id: strin
           onClick={() => onDelete(signal.id)}
           aria-label="Delete signal"
           title="Delete signal"
-          className="text-gray-300 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 rounded hover:bg-red-50"
+          className="text-gray-400 hover:text-red-600 transition-colors p-1 rounded hover:bg-red-50"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>

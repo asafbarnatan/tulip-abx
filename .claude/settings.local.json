@@ -133,7 +133,9 @@
       "Bash(git commit -m 'fix\\(actions\\): control cluster layout + + Add new action button *)",
       "Bash(git commit -m 'fix\\(signals\\): always-visible delete button *)",
       "Bash(git commit -m 'feat\\(buying-group\\): Unassigned persona + Add-contact always available *)",
-      "Bash(git commit -m 'feat\\(buying-group\\): free-text persona_type with preset suggestions *)"
+      "Bash(git commit -m 'feat\\(buying-group\\): free-text persona_type with preset suggestions *)",
+      "Bash(git commit -m 'fix\\(buying-group\\): real combobox for persona type \\(not native datalist\\) *)",
+      "Bash(git commit -m 'fix\\(buying-group\\): contact delete works + preferred-channel editable *)"
     ]
   }
 }

@@ -52,13 +52,29 @@ export default function BuyingGroupTab({ contacts, accountId, accountName }: Pro
   const [integrationModal, setIntegrationModal] = useState<{ provider: 'salesforce' | 'zoominfo'; persona_type: string } | null>(null)
   const [editTarget, setEditTarget] = useState<Contact | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  // Two-stage inline confirm — window.confirm() gets silently suppressed in
+  // some Next.js dev contexts (same issue that hit campaign + action deletes
+  // earlier). Keeping the confirmation in-card so the user always sees a
+  // clear "are you sure" step before anything persists to the DB.
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null)
 
-  const deleteContact = async (id: string) => {
-    if (!confirm('Delete this contact? This cannot be undone.')) return
+  const armDelete = (id: string) => {
+    setConfirmingDeleteId(id)
+    // Auto-unarm after 6s so the card doesn't sit in confirm mode forever.
+    setTimeout(() => setConfirmingDeleteId(cur => cur === id ? null : cur), 6000)
+  }
+
+  const commitDelete = async (id: string) => {
+    setConfirmingDeleteId(null)
     setDeletingId(id)
     try {
       const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' })
-      if (res.ok) router.refresh()
+      if (res.ok) {
+        router.refresh()
+      } else {
+        const body = await res.text().catch(() => '')
+        console.error('[BuyingGroupTab] contact delete failed', res.status, body)
+      }
     } finally {
       setDeletingId(null)
     }
@@ -190,23 +206,46 @@ export default function BuyingGroupTab({ contacts, accountId, accountName }: Pro
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${persona?.color ?? 'bg-gray-100 text-gray-600'}`}>
                         {contact.persona_type}
                       </span>
-                      <button
-                        onClick={() => setEditTarget(contact)}
-                        className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700"
-                        aria-label="Edit contact"
-                        title="Edit"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteContact(contact.id)}
-                        disabled={deletingId === contact.id}
-                        className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
-                        aria-label="Delete contact"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {confirmingDeleteId === contact.id ? (
+                        <div className="flex items-center gap-1 bg-white border rounded-md p-0.5" style={{ borderColor: '#fca5a5' }}>
+                          <button
+                            type="button"
+                            onClick={() => commitDelete(contact.id)}
+                            disabled={deletingId === contact.id}
+                            className="text-[11px] font-bold px-2 py-1 rounded"
+                            style={{ backgroundColor: '#dc2626', color: 'white', opacity: deletingId === contact.id ? 0.6 : 1 }}
+                          >
+                            {deletingId === contact.id ? 'Deleting…' : 'Confirm delete'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingDeleteId(null)}
+                            className="text-[11px] text-gray-500 px-2 py-1 rounded hover:bg-gray-100"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => setEditTarget(contact)}
+                            className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700"
+                            aria-label="Edit contact"
+                            title="Edit"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => armDelete(contact.id)}
+                            disabled={deletingId === contact.id}
+                            className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
+                            aria-label="Delete contact"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -593,6 +632,7 @@ function ManualContactModal({
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
   const [painPointsText, setPainPointsText] = useState('')
+  const [preferredChannel, setPreferredChannel] = useState('')
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
@@ -612,7 +652,7 @@ function ManualContactModal({
         linkedin_url: linkedinUrl || null,
         source_url: sourceUrl || linkedinUrl || null,
         inferred_pain_points: painPoints,
-        preferred_channel: email ? 'email' : phone ? 'phone' : 'email',
+        preferred_channel: preferredChannel.trim() || null,
       }),
     })
     setSaving(false)
@@ -638,6 +678,7 @@ function ManualContactModal({
           linkedinUrl={linkedinUrl} setLinkedinUrl={setLinkedinUrl}
           sourceUrl={sourceUrl} setSourceUrl={setSourceUrl}
           painPointsText={painPointsText} setPainPointsText={setPainPointsText}
+          preferredChannel={preferredChannel} setPreferredChannel={setPreferredChannel}
         />
         <div className="flex gap-2 pt-3">
           <button onClick={save} disabled={!name.trim() || !title.trim() || saving} className="text-sm font-bold px-4 py-2 rounded" style={{ backgroundColor: '#00263E', color: '#F2EEA1', opacity: saving || !name.trim() ? 0.6 : 1 }}>
@@ -783,6 +824,7 @@ function EditContactModal({
   const [linkedinUrl, setLinkedinUrl] = useState(contact.linkedin_url && contact.linkedin_url.includes('linkedin.com') ? contact.linkedin_url : '')
   const [sourceUrl, setSourceUrl] = useState(contact.source_url ?? '')
   const [painPointsText, setPainPointsText] = useState((contact.inferred_pain_points ?? []).join('\n'))
+  const [preferredChannel, setPreferredChannel] = useState(contact.preferred_channel ?? '')
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
@@ -800,6 +842,7 @@ function EditContactModal({
         linkedin_url: linkedinUrl || null,
         source_url: sourceUrl || null,
         inferred_pain_points: painPoints,
+        preferred_channel: preferredChannel.trim() || null,
       }),
     })
     setSaving(false)
@@ -825,6 +868,7 @@ function EditContactModal({
           linkedinUrl={linkedinUrl} setLinkedinUrl={setLinkedinUrl}
           sourceUrl={sourceUrl} setSourceUrl={setSourceUrl}
           painPointsText={painPointsText} setPainPointsText={setPainPointsText}
+          preferredChannel={preferredChannel} setPreferredChannel={setPreferredChannel}
         />
         <div className="flex gap-2 pt-3">
           <button onClick={save} disabled={!name.trim() || !title.trim() || saving} className="text-sm font-bold px-4 py-2 rounded" style={{ backgroundColor: '#00263E', color: '#F2EEA1', opacity: saving || !name.trim() ? 0.6 : 1 }}>
@@ -846,8 +890,9 @@ function ContactFormFields(props: {
   linkedinUrl: string; setLinkedinUrl: (v: string) => void
   sourceUrl: string; setSourceUrl: (v: string) => void
   painPointsText: string; setPainPointsText: (v: string) => void
+  preferredChannel: string; setPreferredChannel: (v: string) => void
 }) {
-  const { name, setName, title, setTitle, email, setEmail, phone, setPhone, linkedinUrl, setLinkedinUrl, sourceUrl, setSourceUrl, painPointsText, setPainPointsText } = props
+  const { name, setName, title, setTitle, email, setEmail, phone, setPhone, linkedinUrl, setLinkedinUrl, sourceUrl, setSourceUrl, painPointsText, setPainPointsText, preferredChannel, setPreferredChannel } = props
   return (
     <div className="space-y-2">
       <div>
@@ -876,10 +921,76 @@ function ContactFormFields(props: {
         <label className="text-xs text-gray-600 font-semibold block mb-1">Source URL (public verification)</label>
         <input value={sourceUrl} onChange={e => setSourceUrl(e.target.value)} className="w-full text-sm px-3 py-2 border rounded outline-none font-mono text-xs" placeholder="https://company.com/leadership/..." />
       </div>
+      <PreferredChannelSelect value={preferredChannel} onChange={setPreferredChannel} />
       <div>
         <label className="text-xs text-gray-600 font-semibold block mb-1">Pain points (one per line)</label>
         <textarea value={painPointsText} onChange={e => setPainPointsText(e.target.value)} rows={3} className="w-full text-sm px-3 py-2 border rounded outline-none" placeholder="Paper-based batch records audit risk&#10;Cross-site quality consistency" />
       </div>
+    </div>
+  )
+}
+
+// Preferred contact channel — select with the common 6 options plus an
+// "Other" escape hatch that reveals a text input. Matches the
+// STAKEHOLDER_ROLE_PRESETS pattern we already use in EditActionModal for
+// the role field, which is well-tested.
+const CHANNEL_PRESETS = ['Email', 'Phone', 'LinkedIn', 'Microsoft Teams', 'Slack', 'In-person'] as const
+
+function PreferredChannelSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const lowercaseValue = (value ?? '').toLowerCase()
+  const matchedPreset = CHANNEL_PRESETS.find(p => p.toLowerCase() === lowercaseValue)
+  const initialMode = !value ? '' : matchedPreset ?? 'Other'
+  const [mode, setMode] = useState<string>(initialMode)
+  const [customValue, setCustomValue] = useState(matchedPreset ? '' : (value ?? ''))
+
+  // Re-sync when external value changes (e.g. resetting the form).
+  useEffect(() => {
+    const nextMatched = CHANNEL_PRESETS.find(p => p.toLowerCase() === (value ?? '').toLowerCase())
+    const nextMode = !value ? '' : nextMatched ?? 'Other'
+    setMode(nextMode)
+    if (!nextMatched && value) setCustomValue(value)
+    if (nextMatched) setCustomValue('')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
+
+  const handleSelect = (next: string) => {
+    setMode(next)
+    if (next === 'Other') {
+      // Keep whatever was in the custom slot; don't clobber.
+      onChange(customValue)
+    } else if (next === '') {
+      onChange('')
+    } else {
+      setCustomValue('')
+      onChange(next)
+    }
+  }
+
+  return (
+    <div>
+      <label className="text-xs text-gray-600 font-semibold block mb-1">Preferred contact channel</label>
+      <select
+        value={mode}
+        onChange={e => handleSelect(e.target.value)}
+        className="w-full text-sm px-3 py-2 border rounded outline-none bg-white"
+        style={{ borderColor: 'var(--tulip-border)' }}
+      >
+        <option value="">None specified</option>
+        {CHANNEL_PRESETS.map(p => <option key={p} value={p}>{p}</option>)}
+        <option value="Other">Other… (type it in)</option>
+      </select>
+      {mode === 'Other' && (
+        <input
+          type="text"
+          value={customValue}
+          onChange={e => { setCustomValue(e.target.value); onChange(e.target.value) }}
+          placeholder="e.g. WhatsApp, Signal, WeChat, SMS"
+          maxLength={80}
+          className="w-full text-sm px-3 py-2 border rounded outline-none mt-2"
+          style={{ borderColor: 'var(--tulip-border)' }}
+          autoFocus
+        />
+      )}
     </div>
   )
 }

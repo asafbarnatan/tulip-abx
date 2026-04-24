@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tulip ABX
 
-## Getting Started
+Account-based experience platform for Tulip's outbound motion. Built as a demo for the April 2026 CEO presentation.
 
-First, run the development server:
+**Live:** https://tulip-abx.vercel.app
+
+## What's in here
+
+A sales-ops platform built around five Tier-1 target accounts (Bayer AG, Daikin Industries, Boston Scientific, Thermo Fisher Scientific, RTX), with six Claude-powered agents that handle account intelligence, signal watching, positioning, play orchestration, LinkedIn outreach, and contact research.
+
+- **Mission Control** — KPI bar, agent activity feed, pinned LinkedIn campaigns, account pulse.
+- **Accounts** — tier-grouped dashboard → per-account detail with Positioning Brief (April Dunford format), Buying Group, Signals, Recommended Plays, Actions (interaction-stage workflow), Campaigns, Agents.
+- **Agents** — showcase of the six-agent pipeline with run history.
+- **Integrations** — LinkedIn (live), Salesforce + ZoomInfo (OAuth scaffolded, activate on credential provision).
+
+## Stack
+
+- Next.js 16 App Router + TypeScript (strict)
+- Supabase (Postgres + REST via `@supabase/supabase-js`)
+- Claude Opus 4.6 agents via Anthropic SDK (tool-use + SSE streaming)
+- LinkedIn Marketing API (OAuth + adAnalyticsV2 sync + draft/publish)
+- Vercel deploy with GitHub auto-build
+
+## Local dev
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev              # http://localhost:3000
+npm run build            # production build
+npm test                 # vitest (23 tests)
+npm run typecheck        # tsc --noEmit
+npm run lint             # eslint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Environment variables live in `.env.local` (gitignored). See `lib/supabase.ts` and `lib/agents/*.ts` for the required keys.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy pipeline
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Every push to `main` auto-deploys via Vercel → https://tulip-abx.vercel.app.
 
-## Learn More
+## Database migrations
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Migrations live in `supabase/migrations/` and apply in chronological order. Run via the Supabase SQL editor.

@@ -286,6 +286,11 @@ VERIFIED PUBLIC TULIP ROSTER (safe to name):
     - RFK Racing (motorsports)
     - Pratt Miller Engineering (U.S. defense engineering and low-volume
       aerospace — THE named-customer proof for aerospace/defense briefs)
+    - Vertex (pharma / biotech — confirmed on tulip.co homepage customer strip)
+    - Smith+Nephew (medical device — orthopedics, wound management, sports medicine)
+    - AstraZeneca (biopharma — confirmed on tulip.co homepage customer strip)
+    - Saint-Gobain (building materials, high-performance materials)
+    - Skydio (autonomous drones, defense / commercial aerial)
     - VEKA, Innovafeed, Zaleco, Reframe Systems, Test Devices by Schenck
 
   Partnerships / Strategic alliances (publicly announced):
@@ -308,9 +313,9 @@ VERIFIED PUBLIC TULIP ROSTER (safe to name):
        tulip.co/case-studies/medical-device-case-study/
 
 NAMES THAT ARE NOT ON TULIP'S ROSTER — do NOT cite as customers:
-    Moderna, Takeda, Merck (US or KGaA), Pfizer, AstraZeneca, Sanofi, Novartis,
-    GSK, Amgen, Lonza, Bayer, Thermo Fisher, Boston Scientific, RTX, Pratt &
-    Whitney, Collins Aerospace, Raytheon, Dentsply Sirona, Ethicon.
+    Moderna, Takeda, Merck (US or KGaA), Pfizer, Sanofi, Novartis, GSK, Amgen,
+    Lonza, Bayer, Thermo Fisher, Boston Scientific, RTX, Pratt & Whitney,
+    Collins Aerospace, Raytheon, Dentsply Sirona, Ethicon.
     (Several of these appear as TARGET accounts in this platform — never
     describe them as existing Tulip customers.)
 

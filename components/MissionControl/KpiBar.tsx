@@ -27,6 +27,8 @@ interface KpiData {
   total_leads: number
   total_spend: number
   linkedin_ctr: number
+  total_engagements: number
+  engagement_rate: number
 }
 
 type HistoryData = Partial<Record<keyof KpiData, number[]>>
@@ -46,6 +48,7 @@ const BANDS: Partial<Record<keyof KpiData, { green: number; amber: number; inver
   plays_recommended: { green: 2, amber: 1 },
   plays_executed:    { green: 1, amber: 0.5 },
   linkedin_ctr:      { green: 0.5, amber: 0.2 },
+  engagement_rate:   { green: 2.0, amber: 0.5 },
 }
 
 function bandColor(key: keyof KpiData, value: number): string {
@@ -197,7 +200,7 @@ const GROUPS: Group[] = [
   {
     title: 'LinkedIn Campaign Performance',
     caption: 'Aggregate totals across every live + historical campaign in the account',
-    columns: 5,
+    columns: 6,
     tiles: [
       {
         key: 'total_impressions',
@@ -216,12 +219,20 @@ const GROUPS: Group[] = [
         formula: 'SUM(clicks) across all linkedin_campaigns rows.',
       },
       {
-        key: 'linkedin_ctr',
-        label: 'Aggregate CTR',
+        key: 'total_engagements',
+        label: 'Engagements',
+        format: v => v.toLocaleString(),
+        description: 'Reactions + comments + shares',
+        definition: 'Total number of times people engaged with your ads: reactions, comments, shares, follows, and other interactions. Pulled from LinkedIn\'s "Total Engagement" metric. Matches Campaign Manager\'s Engagement column on the Ads tab.',
+        formula: 'SUM(total_engagements) across all linkedin_campaigns rows.',
+      },
+      {
+        key: 'engagement_rate',
+        label: 'Engagement Rate',
         format: v => `${v}%`,
-        description: 'Clicks ÷ impressions',
-        definition: 'Click-through rate across every campaign combined. The primary signal of creative/targeting fit. Industry median for B2B LinkedIn Sponsored Content is ~0.35%; top quartile is ≥0.65%.',
-        formula: 'SUM(clicks) ÷ SUM(impressions) × 100, rounded to 2 decimals. Band: ≥0.5% green, 0.2-0.5% amber, <0.2% red.',
+        description: 'Engagements ÷ impressions',
+        definition: 'Share of ad views that produced any engagement — LinkedIn\'s headline metric on sponsored content. Industry median for B2B LinkedIn Sponsored Content is ~0.35%; anything above 2% is strong on low-volume targeted ad sets.',
+        formula: 'SUM(total_engagements) ÷ SUM(impressions) × 100, rounded to 2 decimals. Band: ≥2% green, 0.5-2% amber, <0.5% red.',
       },
       {
         key: 'total_leads',

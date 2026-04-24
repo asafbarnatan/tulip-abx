@@ -116,6 +116,10 @@ export async function POST(request: NextRequest) {
   const clkColIdx = findCol(headers, ['Clicks', 'Total Clicks'])
   const spendColIdx = findCol(headers, ['Total Spent', 'Total Spent (USD)', 'Total Spent in Account Currency', 'Amount Spent', 'Cost', 'Spend', 'Total Amount Spent'])
   const leadsColIdx = findCol(headers, ['Leads', 'Total Leads', 'Lead Gen Form Completions'])
+  // Engagement is LinkedIn's "Total Engagements" column on the Ad Performance
+  // report (reactions + comments + shares + follows + other clicks). Absent
+  // on older exports — falls back to 0.
+  const engagementsColIdx = findCol(headers, ['Total Engagements', 'Total Engagement', 'Engagements', 'Engagement'])
 
   if (idColIdx === -1 && adSetColIdx === -1) {
     return NextResponse.json({
@@ -136,7 +140,7 @@ export async function POST(request: NextRequest) {
     if (c.linkedin_campaign_id) byLinkedInId.set(String(c.linkedin_campaign_id), { id: c.id, campaign_name: c.campaign_name })
   }
 
-  const matched: Array<{ linkedin_campaign_id: string; campaign_name: string; impressions: number; clicks: number; cost_usd: number; leads: number }> = []
+  const matched: Array<{ linkedin_campaign_id: string; campaign_name: string; impressions: number; clicks: number; cost_usd: number; leads: number; total_engagements: number }> = []
   const not_found: string[] = []
   const errors: string[] = []
 
@@ -144,7 +148,7 @@ export async function POST(request: NextRequest) {
   // for 5 days produces 5 rows. Earlier versions of this endpoint wrote each
   // row directly, so the last row's metrics clobbered the sum. Accumulate
   // into a per-campaign bucket and write ONCE at the end.
-  type Bucket = { match: { id: string; campaign_name: string }; linkedinId: string; impressions: number; clicks: number; cost_usd: number; leads: number; rowCount: number }
+  type Bucket = { match: { id: string; campaign_name: string }; linkedinId: string; impressions: number; clicks: number; cost_usd: number; leads: number; engagements: number; rowCount: number }
   const buckets = new Map<string, Bucket>()
 
   for (let i = headerIndex + 1; i < lines.length; i++) {
@@ -174,15 +178,17 @@ export async function POST(request: NextRequest) {
     const clicks = clkColIdx >= 0 ? toNumber(cells[clkColIdx]) : 0
     const cost_usd = spendColIdx >= 0 ? toNumber(cells[spendColIdx]) : 0
     const leads = leadsColIdx >= 0 ? toNumber(cells[leadsColIdx]) : 0
+    const engagements = engagementsColIdx >= 0 ? toNumber(cells[engagementsColIdx]) : 0
 
     const b = buckets.get(match.id)
     if (!b) {
-      buckets.set(match.id, { match, linkedinId, impressions, clicks, cost_usd, leads, rowCount: 1 })
+      buckets.set(match.id, { match, linkedinId, impressions, clicks, cost_usd, leads, engagements, rowCount: 1 })
     } else {
       b.impressions += impressions
       b.clicks += clicks
       b.cost_usd += cost_usd
       b.leads += leads
+      b.engagements += engagements
       b.rowCount += 1
     }
   }
@@ -197,6 +203,7 @@ export async function POST(request: NextRequest) {
         clicks: b.clicks,
         cost_usd,
         leads: b.leads,
+        total_engagements: b.engagements,
         updated_at: new Date().toISOString(),
       })
       .eq('id', b.match.id)
@@ -211,6 +218,7 @@ export async function POST(request: NextRequest) {
         clicks: b.clicks,
         cost_usd,
         leads: b.leads,
+        total_engagements: b.engagements,
       })
     }
   }
@@ -229,6 +237,7 @@ export async function POST(request: NextRequest) {
       clicks: clkColIdx >= 0 ? headers[clkColIdx] : null,
       spend: spendColIdx >= 0 ? headers[spendColIdx] : null,
       leads: leadsColIdx >= 0 ? headers[leadsColIdx] : null,
+      engagements: engagementsColIdx >= 0 ? headers[engagementsColIdx] : null,
     },
   })
 }

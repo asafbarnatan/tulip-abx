@@ -26,7 +26,7 @@ export async function GET() {
     sb.from('signals').select('id, processed'),
     sb.from('positioning_briefs').select('id, account_id, approved'),
     sb.from('account_actions').select('id, action_type, outcome, performed_by, created_at').gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
-    sb.from('linkedin_campaigns').select('id, impressions, clicks, cost_usd, leads, status'),
+    sb.from('linkedin_campaigns').select('id, impressions, clicks, cost_usd, leads, total_engagements, status'),
   ])
 
   const allAccounts = accounts ?? []
@@ -71,6 +71,11 @@ export async function GET() {
   const totalClicks = allCampaigns.reduce((s, c) => s + (c.clicks ?? 0), 0)
   const totalLeads = allCampaigns.reduce((s, c) => s + (c.leads ?? 0), 0)
   const totalSpend = +allCampaigns.reduce((s, c) => s + Number(c.cost_usd ?? 0), 0).toFixed(2)
+  // Engagement metrics — total_engagements column was added in the
+  // 2026-04-24_campaign_engagements migration. Falls back to 0 for rows
+  // that predate the migration or don't have CSV-imported engagement data.
+  const totalEngagements = allCampaigns.reduce((s, c) => s + Number(c.total_engagements ?? 0), 0)
+  const engagementRate = totalImpressions > 0 ? +((totalEngagements / totalImpressions) * 100).toFixed(2) : 0
   const linkedinCtr = totalImpressions > 0 ? +((totalClicks / totalImpressions) * 100).toFixed(2) : 0
   const activeCampaigns = allCampaigns.filter(c => c.status === 'active').length
 
@@ -95,5 +100,7 @@ export async function GET() {
     total_leads: totalLeads,
     total_spend: totalSpend,
     linkedin_ctr: linkedinCtr,
+    total_engagements: totalEngagements,
+    engagement_rate: engagementRate,
   })
 }

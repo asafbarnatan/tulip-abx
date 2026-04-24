@@ -40,6 +40,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (body.impressions !== undefined) update.impressions = Number(body.impressions) || 0
   if (body.clicks !== undefined) update.clicks = Number(body.clicks) || 0
   if (body.leads !== undefined) update.leads = Number(body.leads) || 0
+  if (body.total_engagements !== undefined) update.total_engagements = Math.max(0, Number(body.total_engagements) || 0)
   if (body.cost_usd !== undefined) update.cost_usd = Number(body.cost_usd) || 0
   if (body.budget_usd !== undefined) update.budget_usd = Number(body.budget_usd) || 0
   if (body.audience_size !== undefined) update.audience_size = body.audience_size === null || body.audience_size === '' ? null : Number(body.audience_size) || 0

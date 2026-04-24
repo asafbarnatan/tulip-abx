@@ -24,6 +24,7 @@ interface Campaign {
   leads: number
   cost_usd: number
   budget_usd?: number
+  total_engagements?: number
   created_at: string
   accounts?: { name: string }
   linkedin_campaign_id?: string
@@ -811,6 +812,7 @@ interface MetricsFormProps {
     impressions: number
     clicks: number
     leads: number
+    total_engagements: number
     cost_usd: number
     budget_usd?: number | null
     audience_size?: number | null
@@ -823,6 +825,7 @@ function MetricsForm({ campaign, onCancel, onSubmit }: MetricsFormProps) {
   const [impressions, setImpressions] = useState(String(campaign.impressions))
   const [clicks, setClicks] = useState(String(campaign.clicks))
   const [leads, setLeads] = useState(String(campaign.leads))
+  const [engagements, setEngagements] = useState(String(campaign.total_engagements ?? 0))
   const [cost, setCost] = useState(String(campaign.cost_usd))
   const [budget, setBudget] = useState(campaign.budget_usd != null ? String(campaign.budget_usd) : '')
   const [audienceSize, setAudienceSize] = useState(campaign.audience_size != null ? String(campaign.audience_size) : '')
@@ -842,6 +845,7 @@ function MetricsForm({ campaign, onCancel, onSubmit }: MetricsFormProps) {
       impressions: Number(impressions) || 0,
       clicks: Number(clicks) || 0,
       leads: Number(leads) || 0,
+      total_engagements: Math.max(0, Number(engagements) || 0),
       cost_usd: Number(cost) || 0,
       budget_usd: parseOptionalNumber(budget),
       audience_size: parseOptionalNumber(audienceSize),
@@ -863,6 +867,7 @@ function MetricsForm({ campaign, onCancel, onSubmit }: MetricsFormProps) {
         {[
           { label: 'Impressions', value: impressions, setter: setImpressions, hint: 'Total ad views' },
           { label: 'Clicks', value: clicks, setter: setClicks, hint: 'Landing page clicks' },
+          { label: 'Engagements', value: engagements, setter: setEngagements, hint: 'Reactions + comments + shares + follows' },
           { label: 'Leads', value: leads, setter: setLeads, hint: 'Conversions via Insight Tag' },
           { label: 'Cost ($)', value: cost, setter: setCost, hint: 'Actual spend to date' },
         ].map(f => (
@@ -1335,10 +1340,10 @@ interface ImportResult {
   matched_count: number
   not_found_count: number
   errors_count: number
-  matched: Array<{ linkedin_campaign_id: string; campaign_name: string; impressions: number; clicks: number; cost_usd: number; leads: number }>
+  matched: Array<{ linkedin_campaign_id: string; campaign_name: string; impressions: number; clicks: number; cost_usd: number; leads: number; total_engagements?: number }>
   not_found: string[]
   errors: string[]
-  columns_detected: { campaign_id: string | null; impressions: string | null; clicks: string | null; spend: string | null; leads: string | null }
+  columns_detected: { campaign_id: string | null; ad_set_id?: string | null; impressions: string | null; clicks: string | null; spend: string | null; leads: string | null; engagements?: string | null }
 }
 
 function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
@@ -1492,7 +1497,7 @@ function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
                         <div style={{ fontSize: 10, color: '#94a3b8' }}>LinkedIn ID: {m.linkedin_campaign_id}</div>
                       </div>
                       <div style={{ fontSize: 11, color: '#475569', textAlign: 'right' }}>
-                        {m.impressions.toLocaleString()} imp · {m.clicks} clk · ${m.cost_usd.toFixed(2)}
+                        {m.impressions.toLocaleString()} imp · {m.clicks} clk{m.total_engagements != null && m.total_engagements > 0 ? ` · ${m.total_engagements} eng` : ''} · ${m.cost_usd.toFixed(2)}
                       </div>
                     </div>
                   ))}

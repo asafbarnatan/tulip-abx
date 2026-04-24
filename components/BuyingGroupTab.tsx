@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Contact } from '@/lib/database.types'
 import { Card, CardContent } from '@/components/ui/card'
-import { Link2, Tag, ExternalLink, Sparkles, UserPlus, Database, Cloud, Pencil, Trash2, Mail, Phone } from 'lucide-react'
+import { Link2, Tag, ExternalLink, Sparkles, UserPlus, Database, Cloud, Pencil, Trash2, Mail, Phone, ChevronDown } from 'lucide-react'
 
 const PERSONA_CONFIG: Record<string, { color: string; description: string }> = {
   'Champion':           { color: 'bg-green-100 text-green-800',  description: 'Internal advocate — drives internal buy-in' },
@@ -650,32 +650,104 @@ function ManualContactModal({
   )
 }
 
-// Shared persona-type combobox used by both Add and Edit modals. The 6
-// classical values (PERSONA_OPTIONS) are surfaced as preset suggestions via
-// a datalist — browser autocompletes them as you type, but any custom string
-// is accepted and saved. Enterprise buying groups often produce stakeholder
-// labels that don't fit the classical taxonomy ("Plant GM EMEA", "Procurement
-// Gatekeeper", "Strategic Advisor"); free text honors that.
+// Shared persona-type combobox — custom implementation, not native <datalist>.
+//
+// Native datalists have two killer UX bugs for this case:
+//   (1) They filter suggestions by the current input text, so once a preset is
+//       selected the list collapses to just that one value
+//   (2) They render inconsistently across browsers (Safari especially)
+//
+// This combobox: text input (free-typing always works) + a persistent chevron
+// that opens a full preset panel with label + hint. Click a preset to fill
+// the input and close. Click outside or press Escape to close. Typing filters
+// the panel but never blocks custom values from being submitted.
 function PersonaTypeSelect({ value, onChange, className }: { value: string; onChange: (v: string) => void; className?: string }) {
   const isPreset = PERSONA_OPTIONS.some(o => o.value === value)
-  const datalistId = 'persona-type-presets'
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Click-outside: close the panel when the click lands outside the container.
+  useEffect(() => {
+    if (!open) return
+    const onDocClick = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open])
+
+  // Keyboard: Escape closes. ArrowDown opens + focuses panel (first item).
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') { setOpen(false); return }
+    if (e.key === 'ArrowDown' && !open) { setOpen(true) }
+  }
+
+  // Typing filters the preset list but never blocks the input — user can
+  // always save a custom value by hitting Save regardless of the list state.
+  const filtered = value.trim() === ''
+    ? PERSONA_OPTIONS
+    : PERSONA_OPTIONS.filter(o =>
+        o.label.toLowerCase().includes(value.toLowerCase()) ||
+        o.hint.toLowerCase().includes(value.toLowerCase()))
+  const panelOptions = filtered.length > 0 ? filtered : PERSONA_OPTIONS
+
   return (
     <div className={className}>
       <label className="text-xs text-gray-600 font-semibold block mb-1">Buying-group role</label>
-      <input
-        type="text"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        list={datalistId}
-        placeholder="Champion, Economic Buyer, or type your own (e.g. Plant GM EMEA)"
-        maxLength={120}
-        className="w-full text-sm px-3 py-2 border rounded outline-none bg-white"
-      />
-      <datalist id={datalistId}>
-        {PERSONA_OPTIONS.map(o => (
-          <option key={o.value} value={o.value}>{o.hint}</option>
-        ))}
-      </datalist>
+      <div ref={containerRef} className="relative">
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={e => { onChange(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={onKeyDown}
+          placeholder="Champion, Economic Buyer, or type your own (e.g. Plant GM EMEA)"
+          maxLength={120}
+          className="w-full text-sm pl-3 pr-9 py-2 border rounded outline-none bg-white"
+          style={{ borderColor: 'var(--tulip-border)' }}
+          autoComplete="off"
+        />
+        <button
+          type="button"
+          onClick={() => { setOpen(o => !o); inputRef.current?.focus() }}
+          aria-label={open ? 'Close role suggestions' : 'Open role suggestions'}
+          className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-gray-100 text-gray-500"
+        >
+          <ChevronDown size={14} className={open ? 'rotate-180 transition-transform' : 'transition-transform'} />
+        </button>
+
+        {open && (
+          <div
+            className="absolute left-0 right-0 top-full mt-1 z-50 bg-white border rounded-md shadow-lg overflow-hidden"
+            style={{ borderColor: 'var(--tulip-border)', maxHeight: 280, overflowY: 'auto' }}
+          >
+            {panelOptions.map(o => (
+              <button
+                key={o.value}
+                type="button"
+                onMouseDown={e => e.preventDefault() /* keep input focus */}
+                onClick={() => { onChange(o.value); setOpen(false) }}
+                className="w-full text-left px-3 py-2 hover:bg-sky-50 border-b last:border-b-0 transition-colors"
+                style={{ borderColor: 'var(--tulip-border)' }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold" style={{ color: 'var(--tulip-navy)' }}>{o.label}</span>
+                  {value === o.value && <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600">Selected</span>}
+                </div>
+                <div className="text-[11px] text-gray-500 leading-snug">{o.hint}</div>
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <div className="px-3 py-2 text-[11px] text-gray-500 italic">
+                No preset matches — hit Save to use &ldquo;{value}&rdquo; as a custom role.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {value === 'Unassigned' && (
         <div className="text-[11px] text-amber-700 mt-1">
           You can reclassify this person later via the Edit button on their card.
@@ -683,7 +755,7 @@ function PersonaTypeSelect({ value, onChange, className }: { value: string; onCh
       )}
       {value && !isPreset && (
         <div className="text-[11px] text-gray-500 mt-1">
-          Custom role — the 6 classical labels (Champion, Economic Buyer, Technical Evaluator, End User, Blocker, Unassigned) are just suggestions. Whatever you type saves to the database.
+          Custom role — the 6 classical labels are just suggestions. Whatever you type saves to the database.
         </div>
       )}
     </div>

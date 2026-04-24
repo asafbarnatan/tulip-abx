@@ -40,3 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .gstack/
+
+# claude code local settings (per-user, not shared)
+.claude/settings.local.json
+.claude/local/
+
+# legacy design audit output (generated, not source)
+.design-audit-*/

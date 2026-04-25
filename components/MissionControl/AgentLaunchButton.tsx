@@ -15,7 +15,7 @@ interface Props {
   onRunEnd: () => void
 }
 
-type Pipeline = 'full' | 'intelligence' | 'positioning' | 'plays' | 'linkedin' | 'signal-watch'
+type Pipeline = 'full' | 'intelligence' | 'positioning' | 'plays' | 'linkedin' | 'contact-research' | 'signal-watch'
 
 const PIPELINES: { value: Pipeline; label: string }[] = [
   { value: 'full', label: 'Full Pipeline' },
@@ -23,6 +23,7 @@ const PIPELINES: { value: Pipeline; label: string }[] = [
   { value: 'positioning', label: 'Positioning Only' },
   { value: 'plays', label: 'Play Recommender' },
   { value: 'linkedin', label: 'LinkedIn Campaign' },
+  { value: 'contact-research', label: 'Contact Research' },
 ]
 
 export function AgentLaunchButton({ accounts, onStep, onRunStart, onRunEnd }: Props) {

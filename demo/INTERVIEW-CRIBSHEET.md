@@ -48,16 +48,19 @@ Three zones, top to bottom:
 
 **Pipeline view — what "Full Pipeline" means:**
 
-A pipeline is an **orchestrated sequence** of agents on one account. **Full Pipeline** runs all six, in this order:
+A pipeline is an **orchestrated sequence** of agents on one account. **Full Pipeline** runs **5 per-account agents in dependency-correct order** — each one's output feeds the next:
 
-1. **AccountIntel** — reads the account
-2. **SignalWatcher** — scores urgency
-3. **Positioning** — writes the brief
-4. **PlayOrchestrator** — drafts the plays
-5. **LinkedIn Campaign** — drafts the ad copy
-6. **ContactResearch** — fills empty buying-group slots
+1. **AccountIntel** — reads the account, sets scores, writes the intelligence summary
+2. **ContactResearch** — fills the next empty buying-group slot (Champion → Economic Buyer → Technical Evaluator) with a real, cited person
+3. **Positioning** — writes the brief, *now able to draft per-persona messages because contacts exist*
+4. **PlayOrchestrator** — drafts plays, *grounded in the brief AND targeted at real contacts*
+5. **LinkedIn Campaign** — drafts ad copy, *anchored in the approved brief*
 
-Single-agent pipelines also available — *Intelligence Only*, *Positioning Only*, *Play Recommender*, *LinkedIn Campaign* — for refreshing one surface without re-running the whole account.
+Single-agent pipelines available too — *Intelligence Only*, *Positioning Only*, *Play Recommender*, *LinkedIn Campaign*, *Contact Research* — for refreshing one surface without re-running the whole account.
+
+**SignalWatcher = a separate, portfolio-wide pipeline** — runs from the Mission Control header ("Run Signal Watch"). It sweeps all 5 accounts in one pass and ranks them by urgency. It's not part of Full Pipeline because its scope is the portfolio, not a single account.
+
+> *"Six agents total — five collaborate on one account when you click Run Pipeline, one sweeps the entire portfolio when you click Run Signal Watch."*
 
 ### 2. Accounts page (the portfolio)
 
@@ -120,16 +123,21 @@ Single-agent pipelines also available — *Intelligence Only*, *Positioning Only
 
 ### 4. Agents page
 
-Showcase of the **6 agents** — role, tooling, recent runs. Walk Nathan through them as bullets:
+The page is split into **two visual sections** that mirror how the agents actually run:
 
-- **AccountIntel** — synthesizes the account profile (firmographics, scoring, intelligence summary)
-- **SignalWatcher** — scores fresh signals across the portfolio and flags the most urgent accounts
-- **Positioning** — writes the April Dunford brief tailored to this account
-- **PlayOrchestrator** — drafts the top 3 plays from the brief + buying group
-- **LinkedIn Campaign** — reads the approved brief and drafts the ad copy + headline
-- **ContactResearch** — builds the buying group from real, verifiable people with cited sources
+**Per-Account Pipeline (5 agents, in order — same sequence as Full Pipeline):**
 
-> *"All Claude Opus 4.6, all tool-calling, every run observable in the activity feed."*
+1. **Account Intelligence** → output in **Account header + Signals tab**
+2. **Contact Research** → output in **Buying Group tab**
+3. **Positioning** → output in **Positioning Brief tab**
+4. **Play Orchestrator** → output in **Recommended Plays + Actions tabs**
+5. **LinkedIn Campaign** → output in **Campaigns tab + Mission Control LinkedIn panel**
+
+**Portfolio Sweep (1 agent, runs separately):**
+
+- **Signal Watcher** → output in **Mission Control Account Pulse + intent scores**
+
+> *"Six agents, two motions. Five run in dependency-correct sequence on one account. One sweeps the whole portfolio."*
 
 ### 5. Integrations
 

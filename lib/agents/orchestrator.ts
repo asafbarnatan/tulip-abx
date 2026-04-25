@@ -3,8 +3,33 @@ import { runPositioningAgent } from './PositioningAgent'
 import { runPlayOrchestratorAgent } from './PlayOrchestratorAgent'
 import { runLinkedInOutreachAgent } from './LinkedInOutreachAgent'
 import { runSignalWatcherAgent } from './SignalWatcherAgent'
+import { runContactResearchAgent } from './ContactResearchAgent'
+import { tool_get_contacts } from './agent-tools'
 
-export type PipelineType = 'full' | 'intelligence' | 'positioning' | 'plays' | 'linkedin' | 'signal-watch'
+export type PipelineType = 'full' | 'intelligence' | 'positioning' | 'plays' | 'linkedin' | 'contact-research' | 'signal-watch'
+
+// Find the highest-priority buying-group slot that has no contact yet. Returns
+// null if Champion + Economic Buyer + Technical Evaluator are all already
+// represented — no point burning Claude Opus on a duplicate hunt. Order matches
+// how AEs actually qualify accounts: champion first, then economic buyer, then
+// the technical gate.
+async function findFirstEmptyPersonaSlot(account_id: string): Promise<{ persona_type: string; target_role: string } | null> {
+  const contacts = await tool_get_contacts(account_id)
+  const filledTypes = new Set(
+    (contacts ?? [])
+      .map((c: { persona_type?: string | null }) => c.persona_type)
+      .filter((t): t is string => Boolean(t))
+  )
+  const PRIORITY_SLOTS: Array<{ persona_type: string; target_role: string }> = [
+    { persona_type: 'Champion', target_role: 'VP Manufacturing or VP Operations' },
+    { persona_type: 'Economic Buyer', target_role: 'COO or SVP Manufacturing' },
+    { persona_type: 'Technical Evaluator', target_role: 'IT/OT Director or Head of Manufacturing IT' },
+  ]
+  for (const slot of PRIORITY_SLOTS) {
+    if (!filledTypes.has(slot.persona_type)) return slot
+  }
+  return null
+}
 
 function encodeSSE(data: object): string {
   return `data: ${JSON.stringify(data)}\n\n`
@@ -53,6 +78,21 @@ export function runAgentPipeline(
           const result = await runAccountIntelligenceAgent(account_id, onStep, trigger_source)
           intelligence_summary = result.output_summary
           send({ type: 'agent_complete', agent: 'AccountIntelligenceAgent', output_summary: result.output_summary, run_id: result.run_id, ts: new Date().toISOString() })
+        }
+
+        // ContactResearch runs BEFORE Positioning so that the brief's per-persona
+        // messages have real contacts to address. We fill at most ONE missing slot
+        // per Full Pipeline run — keeps the run cheap and predictable. AEs who want
+        // to fill more slots can run the standalone 'contact-research' pipeline.
+        if (pipeline === 'full' || pipeline === 'contact-research') {
+          const slot = await findFirstEmptyPersonaSlot(account_id)
+          if (slot) {
+            send({ type: 'agent_start', agent: 'ContactResearchAgent', ts: new Date().toISOString() })
+            const result = await runContactResearchAgent(account_id, slot.target_role, slot.persona_type, onStep, trigger_source)
+            send({ type: 'agent_complete', agent: 'ContactResearchAgent', output_summary: result.summary, run_id: result.run_id, ts: new Date().toISOString() })
+          } else {
+            send({ type: 'agent_skipped', agent: 'ContactResearchAgent', reason: 'Buying group already covers Champion, Economic Buyer, and Technical Evaluator', ts: new Date().toISOString() })
+          }
         }
 
         if (pipeline === 'full' || pipeline === 'positioning') {

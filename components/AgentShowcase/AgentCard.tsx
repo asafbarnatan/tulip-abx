@@ -32,11 +32,23 @@ export default function AgentCard({ agent }: Props) {
         style={{ backgroundColor: `${agent.color}10`, borderBottom: `3px solid ${agent.color}` }}
       >
         <div
-          className="flex items-center justify-center rounded-lg shrink-0"
+          className="flex items-center justify-center rounded-lg shrink-0 relative"
           style={{ width: 56, height: 56, backgroundColor: agent.color }}
           aria-hidden="true"
         >
           <Icon size={28} color="white" strokeWidth={1.75} />
+          {agent.pipelineStep != null && (
+            <div
+              className="absolute -top-2 -left-2 flex items-center justify-center rounded-full font-bold"
+              style={{
+                width: 24, height: 24, backgroundColor: '#00263E', color: 'white',
+                fontSize: 11, border: '2px solid white',
+              }}
+              title={`Pipeline step ${agent.pipelineStep}`}
+            >
+              {agent.pipelineStep}
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 flex-wrap mb-0.5">
@@ -46,6 +58,9 @@ export default function AgentCard({ agent }: Props) {
             </span>
           </div>
           <div className="text-[11px] text-gray-500 font-mono">{agent.key}</div>
+          <div className="text-[11px] mt-1" style={{ color: '#475569' }}>
+            <span style={{ fontWeight: 700, color: '#00263E' }}>Output appears in:</span> {agent.outputAppears}
+          </div>
         </div>
       </div>
 

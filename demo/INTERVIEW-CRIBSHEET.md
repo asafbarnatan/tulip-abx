@@ -24,7 +24,7 @@ One sentence. Move on.
 
 - **Built in Claude Code.** Started from **GStack** — open-source Claude Code stack from **Garry Tan (Y Combinator CEO)**.
 - **Data layer:** Supabase. That's where everything is stored.
-- **Agents:** Anthropic Claude Opus 4.6 with tool-calling for the six pipeline agents. During the build I also leaned on specialized **Claude Code subagents** — design review, marketing content writing, orchestration — each owning a slice of the work.
+- **Agents:** Anthropic Claude Opus 4.6. During the build I also leaned on specialized **Claude Code subagents** — design review, marketing content writing, orchestration — each owning a slice of the work.
 - **Process:** plan → spec → build → ship to Vercel → design polish with Claude Design. Auto-deploy on every push.
 
 If he digs in: *"Happy to go deeper, but that's the boring part — let's look at the platform."*
@@ -42,7 +42,7 @@ Three zones, top to bottom:
 - **System overview (KPI bar)** — how the platform itself is doing: agents active, accounts under management, pipeline coverage, brief approval, plus aggregated **LinkedIn Campaign Performance** (impressions, engagements, engagement rate, spend across active + draft campaigns).
 - **Pipeline + Campaigns section** — the two sides of the operating loop:
   - **Left: Pipeline launcher + Agent Activity Feed.** Pick an account, pick a pipeline, run it. Recent agent runs surface here — including failures.
-  - **Right: LinkedIn Campaigns.** Cards for every campaign — active, draft, completed. **Bayer is pinned at the top — it's the hot account with recent activity.**
+  - **Right: LinkedIn Campaigns.** Cards for every campaign — active, draft, completed. **Bayer is pinned at the top — this is a campaign that just wrapped, ran over the last few days.**
 
 **One-line framing for tiles:** *"Each tile is one job-to-be-done. Don't read the digit — read what it tracks."*
 
@@ -52,8 +52,8 @@ A pipeline is an **orchestrated sequence** of agents on one account. **Full Pipe
 
 1. **AccountIntel** — reads the account, sets scores, writes the intelligence summary
 2. **ContactResearch** — fills the next empty buying-group slot (Champion → Economic Buyer → Technical Evaluator) with a real, cited person
-3. **Positioning** — writes the brief, *now able to draft per-persona messages because contacts exist*
-4. **PlayOrchestrator** — drafts plays, *grounded in the brief AND targeted at real contacts*
+3. **Positioning** — writes the brief, *key messages, strategic pillars, persona angles*
+4. **PlayOrchestrator** — drafts plays, *grounded in the brief*
 5. **LinkedIn Campaign** — drafts ad copy, *anchored in the approved brief*
 
 Single-agent pipelines available too — *Intelligence Only*, *Positioning Only*, *Play Recommender*, *LinkedIn Campaign*, *Contact Research* — for refreshing one surface without re-running the whole account.
@@ -105,7 +105,6 @@ Single-agent pipelines available too — *Intelligence Only*, *Positioning Only*
 #### Deep dive: Signals tab
 
 - One card per signal — intent, news, engagement, firmographic, product usage.
-- **Bold headline** + 2-3 supporting bullets, all grounded in real source data (no fabricated "Bombora intent spike").
 - The ones that haven't been touched yet are the **incoming queue** — the SignalWatcher's job to score and prioritize.
 
 #### Deep dive: Buying Group tab
@@ -141,10 +140,10 @@ The page is split into **two visual sections** that mirror how the agents actual
 
 ### 5. Integrations
 
-- **LinkedIn:** connected via the **Conversions API** (server-to-server token) — used for sending conversion events back to LinkedIn so the algorithm optimizes. **Live performance data isn't streaming yet** — that requires the Marketing API (Marketing Developer Platform partner approval). Once Tulip provides Marketing API credentials, impressions / clicks / spend flow live into Mission Control.
-- **Salesforce + ZoomInfo:** OAuth wiring is scaffolded. Same story — flip on with Tulip's credentials and accounts, contacts, intent data start flowing live.
+- **LinkedIn** — connected today. Live performance data flips on with Tulip's Marketing API credentials.
+- **Salesforce + ZoomInfo** — wired and ready. Plug in Tulip's credentials and accounts, contacts, and intent data flow in.
 
-> *"The platform is API-first. Integrations are a configuration step, not an engineering project."*
+> *"Integrations are a configuration step, not an engineering project."*
 
 ---
 

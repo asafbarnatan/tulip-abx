@@ -17,13 +17,16 @@ interface Props {
 
 type Pipeline = 'full' | 'intelligence' | 'positioning' | 'plays' | 'linkedin' | 'contact-research' | 'signal-watch'
 
+// Order matches the Full Pipeline sequence so the dropdown reads top-to-bottom
+// in the same flow Nathan sees in the Agents page and the cribsheet:
+// Full → AccountIntel(1) → ContactResearch(2) → Positioning(3) → Plays(4) → LinkedIn(5).
 const PIPELINES: { value: Pipeline; label: string }[] = [
   { value: 'full', label: 'Full Pipeline' },
-  { value: 'intelligence', label: 'Intelligence Only' },
-  { value: 'positioning', label: 'Positioning Only' },
-  { value: 'plays', label: 'Play Recommender' },
-  { value: 'linkedin', label: 'LinkedIn Campaign' },
-  { value: 'contact-research', label: 'Contact Research' },
+  { value: 'intelligence', label: '1 · Intelligence Only' },
+  { value: 'contact-research', label: '2 · Contact Research' },
+  { value: 'positioning', label: '3 · Positioning Only' },
+  { value: 'plays', label: '4 · Play Recommender' },
+  { value: 'linkedin', label: '5 · LinkedIn Campaign' },
 ]
 
 export function AgentLaunchButton({ accounts, onStep, onRunStart, onRunEnd }: Props) {

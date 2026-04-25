@@ -599,8 +599,10 @@ export function LinkedInPanel({ initialConnected, accountId }: Props) {
                     </div>
                   )}
 
-                  {/* Classic SaaS B2B marketing KPIs — only shown once the campaign has a real LinkedIn ID */}
-                  {c.status === 'active' && c.linkedin_campaign_id && (
+                  {/* Classic SaaS B2B marketing KPIs — shown whenever the campaign has run
+                      in LinkedIn (active, paused, or completed). Drafts and failed runs hide it
+                      because there are no real numbers to render. */}
+                  {(c.status === 'active' || c.status === 'paused' || c.status === 'completed') && c.linkedin_campaign_id && (
                     <CampaignKpiPanel campaign={c} />
                   )}
 
@@ -651,8 +653,8 @@ export function LinkedInPanel({ initialConnected, accountId }: Props) {
                     />
                   )}
 
-                  {/* LIVE campaign — metrics refresh */}
-                  {c.status === 'active' && !isEditingMetrics && (
+                  {/* LIVE / paused / completed campaign — metrics refresh + LCM link */}
+                  {(c.status === 'active' || c.status === 'paused' || c.status === 'completed') && !isEditingMetrics && (
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--tulip-border)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                         {lcmUrl && (
@@ -1574,8 +1576,9 @@ function CampaignKpiPanel({ campaign }: { campaign: Campaign }) {
 
   // Compute a benchmark-aware one-line verdict: the story of how this campaign
   // is performing vs. LinkedIn B2B industry standards. Leads if we have enough
-  // signal, otherwise falls back to "early data" language.
-  const verdict = buildCampaignVerdict(k, campaign.impressions > 0)
+  // signal, otherwise falls back to "early data" language. For completed
+  // campaigns we shift tense to past — "ran below benchmark" not "running".
+  const verdict = buildCampaignVerdict(k, campaign.impressions > 0, campaign.status === 'completed')
 
   return (
     <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--tulip-border)' }}>
@@ -1613,7 +1616,7 @@ function CampaignKpiPanel({ campaign }: { campaign: Campaign }) {
           }} />
         </div>
         <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 3 }}>
-          Day {k.daysLive} of campaign
+          {campaign.status === 'completed' ? `Closed — ran ${k.daysLive} days` : `Day ${k.daysLive} of campaign`}
         </div>
       </div>
 
@@ -1699,9 +1702,11 @@ function CampaignKpiPanel({ campaign }: { campaign: Campaign }) {
 
 // Turns a benchmark-banded KPI set into a plain-English verdict for the panel header.
 // The point: open with the answer, then show the math — not the reverse.
-function buildCampaignVerdict(k: ReturnType<typeof computeCampaignKpis>, hasData: boolean): string {
+function buildCampaignVerdict(k: ReturnType<typeof computeCampaignKpis>, hasData: boolean, isCompleted = false): string {
   if (!hasData) {
-    return 'Early campaign data — metrics populate as LinkedIn delivers impressions.'
+    return isCompleted
+      ? 'Campaign closed — no measurable delivery on this run.'
+      : 'Early campaign data — metrics populate as LinkedIn delivers impressions.'
   }
 
   const highlights: string[] = []
@@ -1725,7 +1730,9 @@ function buildCampaignVerdict(k: ReturnType<typeof computeCampaignKpis>, hasData
   }
 
   if (highlights.length === 0 && issues.length === 0) {
-    return 'Campaign running to plan — no outlier metrics.'
+    return isCompleted
+      ? 'Campaign closed at plan — no outlier metrics.'
+      : 'Campaign running to plan — no outlier metrics.'
   }
 
   const goodPart = highlights.slice(0, 2).join(', ')

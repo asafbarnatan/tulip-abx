@@ -159,6 +159,23 @@ export const AGENTS: AgentMeta[] = [
   },
 ]
 
+// Single source of truth for the pipeline picker on Mission Control AND on
+// the per-account Agents tab. Both render the same dropdown — keep them in
+// sync by importing this constant. Order matches the Full Pipeline sequence,
+// which matches the numbered cards on /agents and the cribsheet.
+//
+// `value` ↔ orchestrator.ts PipelineType. `agentCount` drives the "Claude
+// Opus · N agents" subtitle: 5 for Full Pipeline (the per-account orchestration),
+// 1 for every single-agent run.
+export const PIPELINE_OPTIONS: Array<{ value: string; label: string; agentCount: number }> = [
+  { value: 'full',             label: 'Full Pipeline',           agentCount: 5 },
+  { value: 'intelligence',     label: '1 · Intelligence Only',   agentCount: 1 },
+  { value: 'contact-research', label: '2 · Contact Research',    agentCount: 1 },
+  { value: 'positioning',      label: '3 · Positioning Only',    agentCount: 1 },
+  { value: 'plays',            label: '4 · Play Recommender',    agentCount: 1 },
+  { value: 'linkedin',         label: '5 · LinkedIn Campaign',   agentCount: 1 },
+]
+
 // Lookup helpers used by the legacy call sites (AgentActivityFeed, AgentRunHistory)
 // that were previously hardcoding these maps.
 const BY_KEY: Record<string, AgentMeta> = Object.fromEntries(AGENTS.map(a => [a.key, a]))

@@ -7,7 +7,7 @@ interface Props {
   accountId: string
 }
 
-import { agentColor, agentLabel } from '@/lib/agents/agent-metadata'
+import { agentColor, agentLabel, PIPELINE_OPTIONS } from '@/lib/agents/agent-metadata'
 
 // Thin backcompat aliases for this file's local identifiers.
 const AGENT_COLORS = new Proxy({} as Record<string, string>, {
@@ -72,7 +72,7 @@ export default function AgentRunHistory({ accountId }: Props) {
     color: status === 'completed' ? '#166534' : status === 'failed' ? '#991b1b' : status === 'running' ? '#1d4ed8' : '#475569',
   })
 
-  const PIPELINES = ['full', 'intelligence', 'positioning', 'plays', 'linkedin']
+  const currentOption = PIPELINE_OPTIONS.find(p => p.value === pipeline) ?? PIPELINE_OPTIONS[0]
 
   return (
     <div>
@@ -84,9 +84,9 @@ export default function AgentRunHistory({ accountId }: Props) {
           disabled={isRunning}
           style={{ fontSize: 12, padding: '6px 10px', borderRadius: 6, border: 'none', outline: 'none', cursor: 'pointer', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white' }}
         >
-          {PIPELINES.map(p => (
-            <option key={p} value={p} style={{ color: '#0f172a' }}>
-              {p === 'full' ? 'Full Pipeline' : p.charAt(0).toUpperCase() + p.slice(1) + ' Agent'}
+          {PIPELINE_OPTIONS.map(p => (
+            <option key={p.value} value={p.value} style={{ color: '#0f172a' }}>
+              {p.label}
             </option>
           ))}
         </select>
@@ -106,7 +106,7 @@ export default function AgentRunHistory({ accountId }: Props) {
         </button>
 
         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginLeft: 4 }}>
-          Claude Opus 4.6 · {PIPELINES.indexOf(pipeline) + 1} agent{pipeline === 'full' ? 's' : ''}
+          Claude Opus 4.6 · {currentOption.agentCount} agent{currentOption.agentCount === 1 ? '' : 's'}
         </div>
       </div>
 

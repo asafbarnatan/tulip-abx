@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Play } from 'lucide-react'
+import { PIPELINE_OPTIONS } from '@/lib/agents/agent-metadata'
 
 interface Account {
   id: string
@@ -17,17 +18,10 @@ interface Props {
 
 type Pipeline = 'full' | 'intelligence' | 'positioning' | 'plays' | 'linkedin' | 'contact-research' | 'signal-watch'
 
-// Order matches the Full Pipeline sequence so the dropdown reads top-to-bottom
-// in the same flow Nathan sees in the Agents page and the cribsheet:
-// Full → AccountIntel(1) → ContactResearch(2) → Positioning(3) → Plays(4) → LinkedIn(5).
-const PIPELINES: { value: Pipeline; label: string }[] = [
-  { value: 'full', label: 'Full Pipeline' },
-  { value: 'intelligence', label: '1 · Intelligence Only' },
-  { value: 'contact-research', label: '2 · Contact Research' },
-  { value: 'positioning', label: '3 · Positioning Only' },
-  { value: 'plays', label: '4 · Play Recommender' },
-  { value: 'linkedin', label: '5 · LinkedIn Campaign' },
-]
+// PIPELINE_OPTIONS is the single source of truth shared with the per-account
+// Agents tab (components/AgentRunHistory.tsx) so the dropdown reads identically
+// in both places. Edit lib/agents/agent-metadata.tsx to change.
+const PIPELINES = PIPELINE_OPTIONS.map(p => ({ value: p.value as Pipeline, label: p.label }))
 
 export function AgentLaunchButton({ accounts, onStep, onRunStart, onRunEnd }: Props) {
   const [running, setRunning] = useState(false)

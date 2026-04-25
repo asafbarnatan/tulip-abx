@@ -389,15 +389,12 @@ export function LinkedInPanel({ initialConnected, accountId }: Props) {
           // viewable in Campaign Manager (history, ads, audience, demographics).
           // Gate only on having a real numeric campaign ID.
           const hasLinkedInId = c.linkedin_campaign_id && /^\d+$/.test(c.linkedin_campaign_id)
-          // Real Tulip ABX ad account ID (verified via Marketing API probe Apr 25).
-          // Stored as a constant rather than env var — there's only one account and
-          // the URL needs to deep-link to it, not be configurable.
-          // Linking to /creatives sorted by engagement rate puts the Bayer card near
-          // the top of LinkedIn's view too — same story across both surfaces.
-          // No creativeStatus filter so completed campaigns are visible.
-          const LINKEDIN_AD_ACCOUNT_ID = '527710786'
+          // Exact Campaign Manager URL Asaf shared (verified working from his
+          // signed-in session). Account 527710786 = "Asaf's Ad Account ABX".
+          // The creativeStatus=ACTIVE filter matches the view he uses live; if a
+          // completed Bayer creative needs to be shown later, switch to ALL.
           const lcmUrl = hasLinkedInId
-            ? `https://www.linkedin.com/campaignmanager/accounts/${LINKEDIN_AD_ACCOUNT_ID}/creatives?businessId=personal&sortBy=ENGAGEMENT_RATE&sortDir=desc`
+            ? 'https://www.linkedin.com/campaignmanager/accounts/527710786/creatives?businessId=personal&creativeStatus=ACTIVE&sortBy=ENGAGEMENT_RATE&sortDir=desc'
             : null
           const isPinned = !!c.pinned_at
 

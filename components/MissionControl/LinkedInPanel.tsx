@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Trash2, RefreshCw, Play, Pencil, ArrowUpRight, Pin, GripVertical } from 'lucide-react'
 import {
   computeCampaignKpis,
@@ -1749,16 +1749,61 @@ function capitalize(s: string): string {
 }
 
 function KpiTile({ label, value, band, help }: { label: string; value: string; band: { bg: string; fg: string }; help: string }) {
+  const [hovered, setHovered] = useState(false)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Delayed close so the cursor can traverse the 6px gap between tile and
+  // tooltip without losing hover state — same pattern as ScoreCircleWithTooltip.
+  const openNow = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+    setHovered(true)
+  }
+  const closeSoon = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(() => setHovered(false), 200)
+  }
+
   return (
     <div
-      title={help}
+      onMouseEnter={openNow}
+      onMouseLeave={closeSoon}
+      onFocus={openNow}
+      onBlur={closeSoon}
+      tabIndex={0}
       style={{
+        position: 'relative',
         backgroundColor: band.bg, borderRadius: 6, padding: '8px 10px',
         display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 54,
+        cursor: 'help', outline: 'none',
       }}
     >
       <div style={{ fontSize: 10.5, color: band.fg, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', opacity: 0.85 }}>{label}</div>
       <div style={{ fontSize: 16, color: band.fg, fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{value}</div>
+
+      {hovered && (
+        <div
+          role="tooltip"
+          onMouseEnter={openNow}
+          onMouseLeave={closeSoon}
+          style={{
+            position: 'absolute', bottom: 'calc(100% + 6px)', left: 0,
+            width: 260, zIndex: 50,
+            backgroundColor: '#00263E', color: 'white',
+            borderRadius: 8, padding: '10px 12px',
+            boxShadow: '0 10px 30px rgba(0, 38, 62, 0.3)',
+            fontSize: 12, lineHeight: 1.5, fontWeight: 400,
+            textAlign: 'left',
+          }}
+        >
+          <div style={{ fontSize: 10, color: '#F2EEA1', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
+            {label}
+          </div>
+          <div style={{ color: '#B6DCE1' }}>{help}</div>
+        </div>
+      )}
     </div>
   )
 }

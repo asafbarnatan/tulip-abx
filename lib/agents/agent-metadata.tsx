@@ -100,9 +100,9 @@ export const AGENTS: AgentMeta[] = [
   },
   {
     key: 'LinkedInOutreachAgent',
-    displayName: 'LinkedIn Outreach',
+    displayName: 'LinkedIn Campaign',
     initials: 'LI',
-    tagline: 'The messenger.',
+    tagline: 'The campaign writer.',
     color: '#0077b5',
     icon: Send,
     description:

@@ -1,15 +1,17 @@
 import { NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 
-// The 5 Claude Opus 4.6 agents the platform ships with. Used for the "Active agents"
-// tile. If we ever add a 6th agent (e.g. ContactResearchAgent joining the pipeline),
-// bump this list — it drives the tile value without requiring a schema change.
+// The 6 Claude Opus 4.6 agents the platform ships with. Used for the "Active
+// agents" tile on Mission Control — must stay in sync with lib/agents/agent-metadata
+// and the README. If a new agent file lands, add its class name here so the tile
+// updates without a schema change.
 const ACTIVE_AGENTS = [
   'AccountIntelligenceAgent',
   'PositioningAgent',
   'PlayOrchestratorAgent',
   'SignalWatcherAgent',
   'LinkedInOutreachAgent',
+  'ContactResearchAgent',
 ]
 
 export async function GET() {

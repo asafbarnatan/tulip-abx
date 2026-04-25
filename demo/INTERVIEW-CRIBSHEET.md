@@ -159,37 +159,9 @@ The page is split into **two visual sections** that mirror how the agents actual
 
 ---
 
-## 5 questions Nathan will likely ask
+## Q&A
 
-(Practice the answer until it's reflex — short, confident, no hedging.)
-
-### Q1. "What's the moat? Isn't this just a Claude wrapper with a Supabase backend?"
-
-> "The moat is the **content rules baked into every agent prompt** — verified customer roster, banned framings, real Tulip AI features by name. A Claude wrapper invents 'DePuy Synthes is a Tulip customer.' This one knows it can't, because Nathan reviewed the rules and they're in version control. The technology is commodity; the ground truth isn't."
-
-### Q2. "Show me where an agent invented something. How do you keep it accurate?"
-
-> "Three guardrails. **One**: every fact has to be quotable from a tool call — no source, no claim. **Two**: a verified-roster file in `lib/agents/content-rules.ts` lists exactly which companies we can name. **Three**: every brief is editable inline. When Nathan or an AE catches a slip, they fix it — and the next pipeline run inherits the corrected rule, not just the corrected output."
-
-### Q3. "What's the one number on this page that tells me whether the platform is working?"
-
-> "**Pipeline coverage on Tier 1.** If the platform is doing its job, every Tier-1 account moves to *pipeline* or *customer*. Today Bayer is in `proposal`, Boston Scientific in `discovery`. The KPI bar shows the ratio — target is 100% by Q3."
-
-### Q4. "How would you roll this out across marketing, sales, AEs, and CS at Tulip without it becoming a content nightmare?"
-
-> "Two things. **One**: editable briefs and editable plays. The team isn't writing copy from scratch — they're approving or editing what the agent drafted. **Two**: the rules file is the single source of truth. When marketing approves a new framing, it lands in `content-rules.ts` and every team gets the new framing on their next pipeline run, no training session needed."
-
-### Q5. "What would you build first if I gave you 30 days for production at Tulip?"
-
-> "Salesforce + Marketing API. Today everything is fed by Supabase and CSV. In production, Salesforce becomes the source of truth for accounts and contacts, and the LinkedIn Marketing API streams campaign performance live. Once those two flip, the agents stop being a demo and start being decision support — every Tulip rep opens Mission Control instead of a Salesforce report."
-
----
-
-## When you don't know the answer
-
-> *"Honest answer — I haven't built that yet. Here's how I'd think about it…"*
-
-That's the answer. Move on.
+→ Anticipated questions + one-sentence answers in **`demo/NATHAN-QA.md`**.
 
 ---
 

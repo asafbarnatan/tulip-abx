@@ -24,7 +24,7 @@ One sentence. Move on.
 
 - **Built in Claude Code.** Started from **GStack** — open-source Claude Code stack from **Garry Tan (Y Combinator CEO)**.
 - **Data layer:** Supabase. That's where everything is stored.
-- **Agents:** Anthropic Claude Opus 4.6, tool-calling.
+- **Agents:** Anthropic Claude Opus 4.6 with tool-calling for the six pipeline agents. During the build I also leaned on specialized **Claude Code subagents** — design review, marketing content writing, orchestration — each owning a slice of the work.
 - **Process:** plan → spec → build → ship to Vercel → design polish with Claude Design. Auto-deploy on every push.
 
 If he digs in: *"Happy to go deeper, but that's the boring part — let's look at the platform."*
@@ -42,13 +42,22 @@ Three zones, top to bottom:
 - **System overview (KPI bar)** — how the platform itself is doing: agents active, accounts under management, pipeline coverage, brief approval, plus aggregated **LinkedIn Campaign Performance** (impressions, engagements, engagement rate, spend across active + draft campaigns).
 - **Pipeline + Campaigns section** — the two sides of the operating loop:
   - **Left: Pipeline launcher + Agent Activity Feed.** Pick an account, pick a pipeline, run it. Recent agent runs surface here — including failures.
-  - **Right: LinkedIn Campaigns.** Cards for every campaign — active, draft, completed. Bayer is pinned at the top.
+  - **Right: LinkedIn Campaigns.** Cards for every campaign — active, draft, completed. **Bayer is pinned at the top — it's the hot account with recent activity.**
 
 **One-line framing for tiles:** *"Each tile is one job-to-be-done. Don't read the digit — read what it tracks."*
 
 **Pipeline view — what "Full Pipeline" means:**
 
-> *"A pipeline is the orchestrated sequence of agents we run on an account. **Full Pipeline** runs all six in order: AccountIntel reads the account, SignalWatcher scores the urgency, Positioning writes the brief, PlayOrchestrator drafts the plays, LinkedIn Campaign drafts the ad, ContactResearch fills empty buying-group slots. You can also run individual agents — Intelligence Only, Positioning Only, Play Recommender, LinkedIn Campaign — when you want a single surface refreshed instead of the whole account."*
+A pipeline is an **orchestrated sequence** of agents on one account. **Full Pipeline** runs all six, in this order:
+
+1. **AccountIntel** — reads the account
+2. **SignalWatcher** — scores urgency
+3. **Positioning** — writes the brief
+4. **PlayOrchestrator** — drafts the plays
+5. **LinkedIn Campaign** — drafts the ad copy
+6. **ContactResearch** — fills empty buying-group slots
+
+Single-agent pipelines also available — *Intelligence Only*, *Positioning Only*, *Play Recommender*, *LinkedIn Campaign* — for refreshing one surface without re-running the whole account.
 
 ### 2. Accounts page (the portfolio)
 
@@ -77,6 +86,8 @@ Three zones, top to bottom:
 - **Actions** ← interaction log (manual + actions spawned from plays)
 - **Agents** ← meta view: every run that's touched this account
 
+> *"And every tab is editable. If Nathan disagrees with a sentence in the Positioning brief, he edits it — and the whole team sees the aligned version on their next refresh. Same for plays, contacts, signals."*
+
 #### Deep dive: Positioning tab (one word per section)
 
 - **Positioning Statement** — the one-sentence pitch in April Dunford structure (For / Category / Key benefit / Unlike / Because).
@@ -92,7 +103,14 @@ Three zones, top to bottom:
 
 - One card per signal — intent, news, engagement, firmographic, product usage.
 - **Bold headline** + 2-3 supporting bullets, all grounded in real source data (no fabricated "Bombora intent spike").
-- The ones that haven't been processed by an agent are the **backlog** — the SignalWatcher's job to score and prioritize.
+- The ones that haven't been touched yet are the **incoming queue** — the SignalWatcher's job to score and prioritize.
+
+#### Deep dive: Buying Group tab
+
+- The map of stakeholders inside Bayer who matter for the deal — one card per real person.
+- Each card shows: name, title, persona type (champion / decision-maker / blocker / technical evaluator / end user), pain points, preferred channel.
+- **ContactResearch agent** built this list from real, publicly verifiable people — every contact is backed by a cited source (LinkedIn profile, press release, company page). It refuses to invent names.
+- AE can add, edit, or remove contacts inline. Free-text persona type if the standard ones don't fit.
 
 #### Deep dive: Bayer Campaign tab
 
@@ -102,9 +120,16 @@ Three zones, top to bottom:
 
 ### 4. Agents page
 
-- Showcase of the **6 agents** with role, tooling, recent runs.
-- *"AccountIntel writes the bio. SignalWatcher prioritizes the backlog. Positioning writes the brief. PlayOrchestrator drafts the plays. **LinkedIn Campaign reads the brief and drafts the ad copy.** ContactResearch fills the buying group with cited, verifiable people."*
-- *"All Claude Opus 4.6, all tool-calling, all observable in the activity feed."*
+Showcase of the **6 agents** — role, tooling, recent runs. Walk Nathan through them as bullets:
+
+- **AccountIntel** — synthesizes the account profile (firmographics, scoring, intelligence summary)
+- **SignalWatcher** — scores fresh signals across the portfolio and flags the most urgent accounts
+- **Positioning** — writes the April Dunford brief tailored to this account
+- **PlayOrchestrator** — drafts the top 3 plays from the brief + buying group
+- **LinkedIn Campaign** — reads the approved brief and drafts the ad copy + headline
+- **ContactResearch** — builds the buying group from real, verifiable people with cited sources
+
+> *"All Claude Opus 4.6, all tool-calling, every run observable in the activity feed."*
 
 ### 5. Integrations
 

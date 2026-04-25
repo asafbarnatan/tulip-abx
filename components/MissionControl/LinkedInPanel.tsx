@@ -385,7 +385,11 @@ export function LinkedInPanel({ initialConnected, accountId }: Props) {
           const isEditingMetrics = metricsEditingId === c.id
           const isEditingDetails = detailsEditingId === c.id
           const isLive = c.status === 'active' && c.linkedin_campaign_id && /^\d+$/.test(c.linkedin_campaign_id)
-          const lcmUrl = isLive ? `https://www.linkedin.com/campaignmanager/accounts/0/campaigns/${c.linkedin_campaign_id}` : null
+          // The LCM URL is independent of status — a completed campaign is still
+          // viewable in Campaign Manager (history, ads, audience, demographics).
+          // Gate only on having a real numeric campaign ID.
+          const hasLinkedInId = c.linkedin_campaign_id && /^\d+$/.test(c.linkedin_campaign_id)
+          const lcmUrl = hasLinkedInId ? `https://www.linkedin.com/campaignmanager/accounts/0/campaigns/${c.linkedin_campaign_id}` : null
           const isPinned = !!c.pinned_at
 
           // Border priority: live green > pinned celery > default. A LIVE campaign

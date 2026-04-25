@@ -18,22 +18,20 @@
 ## Demo flow
 
 ### 1. Mission Control (the daily routine)
-**Frame:** *"This is what the GTM team opens every morning."* Three zones, top to bottom:
-- **System overview (KPI bar)** — how the platform itself is doing: agents active, accounts under management, pipeline coverage, brief approval, plus aggregated **LinkedIn Campaign Performance** (impressions, engagements, engagement rate, spend across active + draft campaigns).
+**Frame:** *"This is what the teams opens every morning."* Three zones, top to bottom:
+- **System overview (KPI bar)** — how the platform itself is doing: agents active, accounts under management, pipeline coverage, brief approval, plus aggregated **LinkedIn Campaign Performance** (impressions, engagements).
 - **Pipeline + Campaigns section** — the two sides of the operating loop:
   - **Left: Pipeline launcher + Agent Activity Feed.** Pick an account, pick a pipeline, run it. Recent agent runs surface here — including failures.
   - **Right: LinkedIn Campaigns.** Cards for every campaign — active, draft, completed. **Bayer is pinned at the top — this is a campaign that just wrapped, ran over the last few days.**
 
-**Tile framing:** *"Each tile is one job-to-be-done. Don't read the digit — read what it tracks."*
-
 **Pipeline view — what "Full Pipeline" means.** Orchestrated sequence of agents on one account. **Full Pipeline** runs **5 per-account agents in dependency-correct order** — each output feeds the next:
 1. **AccountIntel** — reads the account, sets scores, writes the intelligence summary
-2. **ContactResearch** — fills the next empty buying-group slot (Champion → Economic Buyer → Technical Evaluator) with a real, cited person
-3. **Positioning** — writes the brief, *key messages, strategic pillars, persona angles*
+2. **ContactResearch** — fills the buying-group slot (Champion → Economic Buyer → Technical Evaluator) with a real, cited person
+3. **Positioning** — writes the Positioning brief, key messages, strategic pillars.
 4. **PlayOrchestrator** — drafts plays, *grounded in the brief*
 5. **LinkedIn Campaign** — drafts ad copy, *anchored in the approved brief*
 
-Single-agent pipelines available too — *Intelligence Only*, *Positioning Only*, *Play Recommender*, *LinkedIn Campaign*, *Contact Research* — for refreshing one surface without re-running the whole account.
+Single-agent pipelines available too — *Intelligence Only*, *Positioning Only* — for refreshing one surface without re-running the whole account.
 
 **SignalWatcher = a separate, portfolio-wide pipeline** — runs from the Mission Control header ("Run Signal Watch"). It sweeps all 5 accounts in one pass and ranks them by urgency. It's not part of Full Pipeline because its scope is the portfolio, not a single account.
 > *"Six agents total — five collaborate on one account when you click Run Pipeline, one sweeps the entire portfolio when you click Run Signal Watch."*
@@ -57,7 +55,7 @@ Single-agent pipelines available too — *Intelligence Only*, *Positioning Only*
 - **Campaigns** ← LinkedIn Campaign agent (anchored in the Positioning brief)
 - **Actions** ← interaction log (manual + actions spawned from plays)
 - **Agents** ← meta view: every run that's touched this account
-> *"And every tab is editable. If Nathan disagrees with a sentence in the Positioning brief, he edits it — and the whole team sees the aligned version on their next refresh. Same for plays, contacts, signals."*
+> *"And every tab is editable. If someone disagrees with a sentence in the Positioning brief, he edits it — and the whole team sees the aligned version on their next refresh. Same for plays, contacts, signals."*
 
 #### Deep dive: Positioning tab (one word per section)
 - **Positioning Statement** — the one-sentence pitch in April Dunford structure (For / Category / Key benefit / Unlike / Because).
@@ -96,14 +94,10 @@ Page is split into **two visual sections** that mirror how the agents actually r
 
 **Portfolio Sweep (1 agent, runs separately):**
 - **Signal Watcher** → output in **Mission Control Account Pulse + intent scores**
-> *"Six agents, two motions. Five run in dependency-correct sequence on one account. One sweeps the whole portfolio."*
 
-### 5. Integrations
+### 5. Integrations *("Integrations are a configuration step, not an engineering project.")*
 - **LinkedIn** — connected today. Live performance data flips on with Tulip's Marketing API credentials.
 - **Salesforce + ZoomInfo** — wired and ready. Plug in Tulip's credentials and accounts, contacts, and intent data flow in.
-> *"Integrations are a configuration step, not an engineering project."*
-
----
 
 ## Behavior reminders (from Dor)
 - **No defensive mood.** Push-back is the test, not the failure.
@@ -113,9 +107,3 @@ Page is split into **two visual sections** that mirror how the agents actually r
 - **Don't read.** You wrote the platform — talk *about* it, don't *recite* it.
 - **High-level only.** Managers don't want the implementation; they want the shape of the bet.
 - **Put on a show.** This is theater with substance. Energy matters.
-
-## Q&A
-→ Anticipated questions + one-sentence answers in **`demo/NATHAN-QA.md`**.
-
-## Closing line (if he doesn't take over)
-> "That's the platform. Six agents, one Mission Control, one source of truth. **What part do you want to break?**"

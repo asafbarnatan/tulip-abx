@@ -51,7 +51,7 @@ try {
 } catch (e) {
   console.log('⚠ userinfo network error:', e.message, '— falling back to static identity.')
 }
-if (!identity) identity = 'Asaf Bar Natan (Marketing API)'
+if (!identity) identity = 'Asaf Bar Natan'
 
 // 2. Ads scope probe — try a 1-day adAnalyticsV2 query against any campaign in
 //    our DB. If LinkedIn returns 200 we know r_ads_reporting is live; if 403

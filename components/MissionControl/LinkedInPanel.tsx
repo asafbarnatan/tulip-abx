@@ -373,7 +373,7 @@ export function LinkedInPanel({ initialConnected, accountId }: Props) {
 
         {!loading && campaigns.length === 0 && (
           <div style={{ textAlign: 'center', color: 'var(--tulip-gray)', fontSize: 13, paddingTop: 24 }}>
-            No campaigns yet. Run the LinkedInOutreachAgent to create one.
+            No campaigns yet. Run the LinkedIn Campaign agent to create one.
           </div>
         )}
 

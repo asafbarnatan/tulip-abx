@@ -99,7 +99,7 @@ const GROUPS: Group[] = [
         format: v => `${v}`,
         description: 'Claude Opus 4.6 agents',
         definition: 'How many autonomous agents are deployed and available to run in this platform instance.',
-        formula: 'Count of named agent classes registered in the orchestrator: AccountIntelligence, Positioning, PlayOrchestrator, SignalWatcher, LinkedInOutreach.',
+        formula: 'Count of named agent classes registered in the orchestrator: AccountIntelligence, Positioning, PlayOrchestrator, SignalWatcher, LinkedIn Campaign, ContactResearch.',
       },
       {
         key: 'total_accounts',

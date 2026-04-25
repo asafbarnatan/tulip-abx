@@ -22,7 +22,7 @@ const PIPELINES: { value: Pipeline; label: string }[] = [
   { value: 'intelligence', label: 'Intelligence Only' },
   { value: 'positioning', label: 'Positioning Only' },
   { value: 'plays', label: 'Play Recommender' },
-  { value: 'linkedin', label: 'LinkedIn Outreach' },
+  { value: 'linkedin', label: 'LinkedIn Campaign' },
 ]
 
 export function AgentLaunchButton({ accounts, onStep, onRunStart, onRunEnd }: Props) {

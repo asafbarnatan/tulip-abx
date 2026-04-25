@@ -10,6 +10,10 @@ import {
   failAgentRun,
 } from './agent-tools'
 import { createWithRetry } from './anthropic-retry'
+import {
+  TULIP_VERIFIED_ROSTER,
+  ACCOUNT_NAME_PRECISION,
+} from './content-rules'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -127,7 +131,11 @@ urgency_reason should quote or paraphrase real signals. Good examples (only if t
 
 If an account has NO unprocessed signals, urgency is "low" or "medium" and urgency_reason should say something like "No new signals — maintain baseline monitoring" or cite lifecycle/tier only. Do not invent activity.
 
-Keep urgency_reason under 220 characters. One or two clauses max.`,
+Keep urgency_reason under 220 characters. One or two clauses max.
+
+${TULIP_VERIFIED_ROSTER}
+
+${ACCOUNT_NAME_PRECISION}`,
       },
     ]
 

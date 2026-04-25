@@ -12,6 +12,11 @@ import {
   completeAgentRun,
   failAgentRun,
 } from './agent-tools'
+import {
+  TULIP_VERIFIED_ROSTER,
+  ACCOUNT_NAME_PRECISION,
+  ZERO_FABRICATION_RULES,
+} from './content-rules'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -116,6 +121,12 @@ Steps:
 5. Synthesize the intelligence — update scores if warranted, create a signal if you've inferred new context
 6. Return a JSON intelligence summary
 
+${TULIP_VERIFIED_ROSTER}
+
+${ACCOUNT_NAME_PRECISION}
+
+${ZERO_FABRICATION_RULES}
+
 SIGNAL CONTENT RULES (when you call create_signal) — CRITICAL:
 The content field renders on the Signals tab. The UI splits it as: the first sentence = bold headline, subsequent short sentences = bullets. Write accordingly.
 
@@ -123,9 +134,8 @@ The content field renders on the Signals tab. The UI splits it as: the first sen
 - Sentences 2-4 (supporting bullets): each is a short standalone sentence, 8-20 words, period-terminated. Max 3 of them.
 - Every bullet must be independently readable. Never write a fragment that relies on the prior sentence for grammar.
 - NO embedded "-" or "•" or markdown in the content. The UI adds the bullet dots.
-- NO invented sources: cite only what real signals.source values show. Do not write "6sense intent spike", "Bombora research", "G2 research" unless those terms already appear in the signals data.
-- NO competitor names, contract values, or M&A details you did not see in the data.
 - For an ENGAGEMENT-GAP synthesis signal: name the specific gap (touchpoint count, contacts untouched, days of silence) grounded in get_account_actions + get_contacts output. Do not invent stakeholder quotes or strategic window framing that is not in the data.
+- Numeric facts (injury counts, recall units, headcount, revenue) MUST be quoted from real signals. Round figures like "830+ injuries" are fabrication unless the data shows them — use the exact integer from the source.
 
 Return ONLY valid JSON in your FINAL message (no tool calls in the final message):
 {

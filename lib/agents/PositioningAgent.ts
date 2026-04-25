@@ -13,6 +13,14 @@ import {
   failAgentRun,
 } from './agent-tools'
 import type { IndustryVertical, Geography } from '@/lib/database.types'
+import {
+  TULIP_CORE_PHILOSOPHY,
+  TULIP_VERIFIED_ROSTER,
+  TULIP_AI_FEATURES,
+  TULIP_BANNED_PHRASES,
+  ACCOUNT_NAME_PRECISION,
+  ZERO_FABRICATION_RULES,
+} from './content-rules'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -141,72 +149,9 @@ Steps:
 5. get_proof_points — load relevant proof points
 6. save_positioning_brief — save the generated brief${contextNote}
 
-═══════════════════════════════════════════════════════════════════════════════
-TULIP POSITIONING — CORE PHILOSOPHY (non-negotiable, applies to every field)
-═══════════════════════════════════════════════════════════════════════════════
-Tulip IS the MES. It is not additive to MES. It is not a layer on top of MES.
-It is the MES — just composable, plant-by-plant, built by production engineers
-themselves. The differentiation against competitors is composability vs. the
-monolithic rigidity of traditional MES vendors (Rockwell Plex, Siemens Opcenter,
-Dassault, SAP MII, etc.). When framing Tulip:
+${TULIP_CORE_PHILOSOPHY}
 
-- CORRECT framing: "a composable MES", "a kaizen-rate production platform",
-  "a GxP-ready frontline platform", "plant-by-plant composable MES".
-- CORRECT contrast: "unlike monolithic MES deployments that lock every plant
-  into one global configuration" / "unlike 18-month rigid MES rollouts" /
-  "unlike traditional MES vendors that force a single global schema".
-- CORRECT "why composable" framing: "production engineers build their own apps
-  from a shared library", "each plant composes the apps that fit its process",
-  "citizen development at kaizen speed", "no central IT queue, no vendor-led
-  implementation cycle".
-
-FORBIDDEN framings (Nathan Linder will reject the brief if these appear):
-- "Tulip layers on top of existing MES" / "Layer, don't replace" — this frames
-  Tulip as additive. Tulip IS the MES.
-- "Tulip sits above your MES/ERP" / "fills the gap above MES" — same issue.
-- "Tulip complements MES by adding frontline" — same issue.
-- Any pillar named "Layer, don't replace" or similar.
-- Any objection response like "Tulip doesn't replace your MES, it sits on top
-  of it." Instead, the response should be: "Tulip IS the MES — just composable.
-  Unlike rigid MES deployments, each plant builds its own apps on the shared
-  Tulip platform. Your existing ERP and upstream systems stay; the rigid MES
-  vendor gets replaced by a platform the production engineers actually own."
-
-═══════════════════════════════════════════════════════════════════════════════
-REAL TULIP AI FEATURES YOU CAN CITE (only when they map to an actual pain)
-═══════════════════════════════════════════════════════════════════════════════
-Building with AI (for the builder / engineer):
-- AI Composer: turns documents or videos into app structures and screens.
-- AI App Translation: automatically translates app text for global deployment
-  (perfect answer to "how do we scale across N plants in M languages").
-- AI Trigger Descriptions: converts trigger logic into plain-English summaries.
-- AI Insights (chat with tables): generates analytics, charts, dashboards from
-  production data via natural-language commands.
-
-Augmenting Production with AI (for the operator / shop floor):
-- Tulip MCP: secure context bridge between Tulip data and external AI assistants.
-- Frontline Copilot AI Chat: lets operators ask natural-language questions
-  grounded in manuals and workflow context.
-- OCR: extracts text and data from paper documents or images, digitizing legacy
-  workflows without manual re-entry.
-- AI Prompt Actions: embeds AI into workflow steps (extract, summarize, analyze).
-
-Agentic AI:
-- Agent Marketplace / Library: pre-built agents downloadable for faster time to
-  value.
-- Example agent: Shift Summary Reporter — summarizes production data to support
-  shift handoffs.
-- Full Page Chat + Automations / Headless Agents: background agents triggered
-  by events, running without human interaction.
-
-Framing shortcuts:
-- Building with AI = helps the builder work faster.
-- Augmenting Production with AI = helps the operator/shop floor work smarter.
-- Predictive AI = predicts · Generative AI = explains · Agentic AI = acts.
-
-USE these features by NAME when they answer an objection or strengthen a proof
-point. Do NOT mention AI vaguely ("we have AI features"). Name the specific
-capability and tie it to the account's specific pain.
+${TULIP_AI_FEATURES}
 
 ═══════════════════════════════════════════════════════════════════════════════
 WRITING RULES (apply to every field)
@@ -241,83 +186,13 @@ PROOF POINT SPECIFICITY:
 - The words "significantly", "dramatically", "materially", "substantially", "meaningfully" are BANNED in proof points.
 - Proof points must reference THIS account's specific pain. Bayer's proof points differ from RTX's. Reusing a generic "manufacturer deployed Tulip" proof is a failure.
 
-CUSTOMER NAMING — HARD RULE (DO NOT VIOLATE):
+${TULIP_VERIFIED_ROSTER}
 
-You may name a company as a Tulip customer or partner ONLY if the name appears
-in one of these three sources:
+${TULIP_BANNED_PHRASES}
 
-  1. The VERIFIED PUBLIC ROSTER below (hand-curated from tulip.co case studies,
-     tulip.co press, and verified partner announcements as of 2026-04-24).
-  2. Output of a tool call that returned Tulip-provided internal data
-     (Salesforce, an internal file, or a Tulip employee statement reached via
-     the provided tools).
-  3. The account record itself already describes Tulip as an incumbent (via
-     positioning_kernel, signals, or account_actions notes) AND that record's
-     source is explicit.
+${ACCOUNT_NAME_PRECISION}
 
-If the name you want to use is NOT in one of those three sources, DO NOT NAME
-IT. Fall back to anonymized industry-qualified phrasing: "A Fortune 500 [X]
-manufacturer…", "A Tulip pharmaceutical customer…", "A J&J MedTech division…"
-(when you know J&J is on the roster but don't know which division specifically).
-
-Treat this rule the same way you treat compliance claims — if you cannot cite
-a source, you cannot make the claim. Inventing "Customer X at Site Y achieved
-Z in N weeks" when you have no verification is a credibility failure that
-Nathan Linder (Tulip CEO) will catch the instant he reads the brief.
-
-VERIFIED PUBLIC TULIP ROSTER (safe to name):
-
-  Customers (named on tulip.co/case-studies or tulip.co public pages):
-    - J&J / Johnson & Johnson (industry: medical device — do NOT invent a
-      specific division like "DePuy Synthes" unless the source confirms it;
-      prefer "A J&J MedTech division")
-    - DMG MORI (machine tools)
-    - Stanley Black & Decker (power tools, diversified manufacturing)
-    - Formlabs (3D printing)
-    - Terex (heavy equipment)
-    - Delta Faucet (consumer)
-    - Outset Medical (medical device)
-    - Tiffany & Co. (luxury goods)
-    - Laerdal (medical)
-    - Piaggio Fast Forward (mobility)
-    - Sharp Packaging (clinical packaging)
-    - Mack Molding (plastics)
-    - TICO Tractors (agricultural equipment)
-    - RFK Racing (motorsports)
-    - Pratt Miller Engineering (U.S. defense engineering and low-volume
-      aerospace — THE named-customer proof for aerospace/defense briefs)
-    - Vertex (pharma / biotech — confirmed on tulip.co homepage customer strip)
-    - Smith+Nephew (medical device — orthopedics, wound management, sports medicine)
-    - AstraZeneca (biopharma — confirmed on tulip.co homepage customer strip)
-    - Saint-Gobain (building materials, high-performance materials)
-    - Skydio (autonomous drones, defense / commercial aerial)
-    - VEKA, Innovafeed, Zaleco, Reframe Systems, Test Devices by Schenck
-
-  Partnerships / Strategic alliances (publicly announced):
-    - Mitsubishi Electric — strategic alliance + $120M Series D investment
-      announced Dec 2025. Tulip now has a Tokyo office. Fully public.
-
-  Capabilities / certifications (publicly announced):
-    - FedRAMP Moderate Equivalency (covers CUI-scope DoD programs)
-    - Composable MES for Aerospace and Defense (official Tulip product)
-    - AI features: AI Composer, AI App Translation, AI Trigger Descriptions,
-      AI Insights, Tulip MCP, Frontline Copilot, Factory Playback, OCR,
-      AI Prompt Actions
-
-  Anonymized Tulip case studies you MAY cite (with real metrics):
-    - "A Tulip pharmaceutical customer reduced equipment changeover time by
-       78%" — from tulip.co/case-studies/pharmaceutical-case-study/
-    - "A Tulip medical device customer built 90+ guided-assembly apps and a
-       fully paperless digital DHR system in a greenfield facility,
-       completing new-product introduction in 6 months" — from
-       tulip.co/case-studies/medical-device-case-study/
-
-NAMES THAT ARE NOT ON TULIP'S ROSTER — do NOT cite as customers:
-    Moderna, Takeda, Merck (US or KGaA), Pfizer, Sanofi, Novartis, GSK, Amgen,
-    Lonza, Bayer, Thermo Fisher, Boston Scientific, RTX, Pratt & Whitney,
-    Collins Aerospace, Raytheon, Dentsply Sirona, Ethicon.
-    (Several of these appear as TARGET accounts in this platform — never
-    describe them as existing Tulip customers.)
+${ZERO_FABRICATION_RULES}
 
 OBJECTION HANDLER RULES:
 - The "We already have MES and ERP — why add another platform?" objection

@@ -13,6 +13,14 @@ import {
   failAgentRun,
 } from './agent-tools'
 import type { IndustryVertical, Geography, LifecycleStage } from '@/lib/database.types'
+import {
+  TULIP_CORE_PHILOSOPHY,
+  TULIP_VERIFIED_ROSTER,
+  TULIP_AI_FEATURES,
+  TULIP_BANNED_PHRASES,
+  ACCOUNT_NAME_PRECISION,
+  ZERO_FABRICATION_RULES,
+} from './content-rules'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -129,6 +137,18 @@ Steps:
 4. get_positioning_brief — align play copy with approved messaging (if available)
 5. get_account_actions — avoid duplicating recent outreach
 6. create_account_action for each top play (max 3) — the notes field MUST be a JSON string in the exact schema below
+
+${TULIP_CORE_PHILOSOPHY}
+
+${TULIP_VERIFIED_ROSTER}
+
+${TULIP_AI_FEATURES}
+
+${TULIP_BANNED_PHRASES}
+
+${ACCOUNT_NAME_PRECISION}
+
+${ZERO_FABRICATION_RULES}
 
 NOTES FIELD — STRUCTURED JSON (the UI parses this literally):
 

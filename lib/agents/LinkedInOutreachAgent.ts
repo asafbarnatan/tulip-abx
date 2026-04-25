@@ -11,6 +11,14 @@ import {
   failAgentRun,
 } from './agent-tools'
 import { getSupabase } from '@/lib/supabase'
+import {
+  TULIP_CORE_PHILOSOPHY,
+  TULIP_VERIFIED_ROSTER,
+  TULIP_AI_FEATURES,
+  TULIP_BANNED_PHRASES,
+  ACCOUNT_NAME_PRECISION,
+  ZERO_FABRICATION_RULES,
+} from './content-rules'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -160,6 +168,18 @@ Steps:
 3. get_positioning_brief — READ the positioning_statement and key_themes. Your ad copy MUST anchor in the brief's category phrase and strategic pillars, not in generic SaaS language.
 4. save_linkedin_campaign — create the campaign draft
 
+${TULIP_CORE_PHILOSOPHY}
+
+${TULIP_VERIFIED_ROSTER}
+
+${TULIP_AI_FEATURES}
+
+${TULIP_BANNED_PHRASES}
+
+${ACCOUNT_NAME_PRECISION}
+
+${ZERO_FABRICATION_RULES}
+
 WRITING RULES for headline + ad_copy (the ad is CUSTOMER-FACING — 2nd person):
 
 ────────────────── HEADLINE (max 100 chars) ──────────────────
@@ -170,42 +190,34 @@ TONE: OBSERVATIONAL, not judgmental. State facts, offer a path. Never shame the 
 
 LENGTH: target 80-100 chars. Too long is a fail; too vague is a fail.
 
-REQUIRED: include the account name AND a specific insider fact (plant name, drug program, regulatory deadline, M&A move, product launch, etc.).
+REQUIRED: include the account name AND a specific insider fact (plant name, drug program, regulatory deadline, M&A move, product launch). The fact MUST come from the data sources listed in ZERO FABRICATION above.
 
 DO EXAMPLES (copy this pattern):
 ✓ "Bayer's five pharma sites still run paper batch records. Here's the 90-day digitization playbook." (97 chars — names account, specific fact, solution path)
 ✓ "Daikin's Fusion 25 plan needs kaizen-rate deployment across 3 continents." (75 chars — names strategic plan, specific solution)
-✓ "Thermo Fisher's $1.8B reshoring bet lives or dies on frontline traceability." (78 chars — names specific investment, specific outcome)
-✓ "Boston Scientific's Cork pacemaker line ships 16M units/yr. Paper DHRs won't scale to 20M." (93 chars — names site, volume, specific regulatory constraint)
 ✓ "RTX Collins' Columbus forging expansion needs AS9100 audit-ready work instructions by Q3." (91 chars — names subsidiary, project, regulatory deadline)
 
 DONT EXAMPLES (never do this):
-✗ "Solida-1's GMP deadline is fixed. Bayer's five sites still run paper batch records. That math doesn't work." (judgmental — "math doesn't work" shames the prospect. Headlines that insult the reader are the single biggest reason enterprise B2B ads fail.)
-✗ "Transform your manufacturing with digital work instructions" (generic slop)
-✗ "Unlock the power of modern MES" (banned words + generic)
+✗ "Solida-1's GMP deadline is fixed. Bayer's five sites still run paper batch records. That math doesn't work." (judgmental snark — never shame the prospect)
+✗ "Transform your manufacturing with digital work instructions" (banned word + generic)
+✗ "Unlock the power of modern MES" (banned word + generic)
 ✗ "Why Bayer is behind on digitization" (negative framing — never punch down at the account)
 
-BANNED PHRASES IN HEADLINES (automatic fail — revise):
+BANNED HEADLINE PATTERNS (automatic fail — revise):
 - "that math doesn't work", "math isn't mathing", or any "X doesn't work" snark
-- "Why [Account] is behind / failing / losing" — never frame the account as the loser
-- "You need X" — too imperative; use "X path" / "X playbook" / "here's how" instead
-- Rhetorical "Will your X pass?" / "Can your X handle?" (anxiety-bait — works in B2C, flops in enterprise)
+- "Why [Account] is behind / failing / losing"
+- "You need X" — use "X path" / "X playbook" / "here's how" instead
+- Rhetorical "Will your X pass?" / "Can your X handle?" (anxiety-bait flops in enterprise)
 
 ────────────────── AD COPY (max 600 chars) ──────────────────
 
 STRUCTURE: 3 short paragraphs (one blank line between).
 
-Paragraph 1 — NAMED FACTS (2-3 sentences): List the account's real specifics. Plant names, product programs, regulatory triggers, recent investments, key personnel. The more insider-specific, the better. This is where the research shows.
+Paragraph 1 — NAMED FACTS (2-3 sentences): The account's real specifics — plant names, product programs, regulatory triggers, recent investments, key personnel. The more insider-specific, the better. Every fact must be quotable from the tool-call data (see ZERO FABRICATION above).
 
-Paragraph 2 — TULIP POSITIONING (1-2 sentences): Anchor in the positioning brief's category phrase. State Tulip's specific technical fit for this vertical. Call out the integration story (sits on top of existing SAP S/4 / ERP / legacy MES).
+Paragraph 2 — TULIP POSITIONING (1-2 sentences): Anchor in the positioning brief's category phrase. Tulip IS the composable MES (see CORE PHILOSOPHY) — never frame Tulip as a layer above MES. State the specific technical fit for this vertical. Frame the integration story as "your ERP and upstream systems stay; the rigid MES vendor is what Tulip replaces."
 
-Paragraph 3 — SEQUENCING / PROOF (1 sentence): Name the validation path ("validated on one line first, templated across the rest") OR a soft-CTA proof point ("a Fortune 500 pharma cut batch review from days to hours").
-
-────────────────── UNIVERSAL BANS ──────────────────
-
-BANNED language (same as positioning brief): "unlock", "empower", "transform", "seamless", "robust", "comprehensive", "next-generation", "cutting-edge", "state-of-the-art", "revolutionary", "game-changing", "industry-leading", "world-class", "holistic".
-
-BANNED recycled phrases: "composable frontline operations platform", "in weeks, not years", "no IT bottleneck, no vendor lock-in" — if the brief uses these, REPHRASE for the ad.
+Paragraph 3 — SEQUENCING / PROOF (1 sentence): Name the validation path ("validated on one line first, then composed across the rest") OR a verified proof point from the roster (e.g. "a Tulip pharmaceutical customer cut equipment changeover by 78%"). Never invent a proof point.
 
 NAME the specific vertical context (ALCOA+ for pharma, AS9100 for aerospace, kaizen for Japan/discrete, DHR for med device). A generic manufacturing ad is a failure.
 

@@ -18,7 +18,7 @@
 ## Demo flow
 
 ### 1. Mission Control (the daily routine)
-**Frame:** *"This is what the teams opens every morning."* Three zones, top to bottom:
+**Frame:** *"This is what the teams open every morning."* Three zones, top to bottom:
 - **System overview (KPI bar)** — how the platform itself is doing: agents active, accounts under management, pipeline coverage, brief approval, plus aggregated **LinkedIn Campaign Performance** (impressions, engagements).
 - **Pipeline + Campaigns section** — the two sides of the operating loop:
   - **Left: Pipeline launcher + Agent Activity Feed.** Pick an account, pick a pipeline, run it. Recent agent runs surface here — including failures.

@@ -36,6 +36,6 @@ Glance, deliver, move on. No hedging, no apologizing.
 *"Not at this scope — this is the first end-to-end product I've shipped solo, from architecture to content to design to deploy."*
 
 **Q12. Why marketing-heavy and not stakeholder sync? The white space felt like the connective tissue between teams, not another CRM or Jira.**
-*"Fair call — marketing was the demo wedge because a $44 LinkedIn campaign is tangible while stakeholder sync is invisible without real teams using it; the product I'd build next is exactly that connective tissue, with the agents as the per-account memory and CRM, ZoomInfo, LinkedIn as data sources, not destinations."*
+*"You're right — the v2 is exactly that connective tissue, with the agents as the per-account memory and CRM, ZoomInfo, LinkedIn as data sources, not destinations."*
 
 **When you don't know:** *"Honest answer — I haven't built that yet. Here's how I'd think about it…"* — then move on.

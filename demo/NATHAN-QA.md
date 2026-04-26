@@ -27,7 +27,7 @@ Glance, deliver, move on. No hedging, no apologizing.
 *"Publish to LinkedIn — every campaign saves as a draft, someone from the marketing team reviews and clicks publish; agents draft, humans decide."*
 
 **Q9. If I rolled this out at Tulip Monday, how long until an AE sees value?**
-*"First Mission Control open — they see prioritized accounts, a generated brief per account, and three drafted plays with openers, cold-start eliminated."*
+*"About two weeks — pick the pilot accounts, study the stakeholders, then the AE opens Mission Control with prioritized accounts, generated briefs, and drafted plays ready to act on."*
 
 **Q10. What surprised you most while building this?**
 *"How fast Claude Code turns a half-formed idea into working software — the real bottleneck is taste and judgment, not typing."*

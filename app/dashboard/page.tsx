@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { supabase } from '@/lib/supabase'
 import type { Account } from '@/lib/database.types'
 import AccountCard from '@/components/AccountCard'
-import { Building2, TrendingUp, Zap, Users } from 'lucide-react'
+import { Layers, Building2, TrendingUp, Users } from 'lucide-react'
 
 async function getAccounts(): Promise<Account[]> {
   const { data, error } = await supabase
@@ -42,8 +42,17 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Stats row */}
+      {/* Stats row — leftmost tile is the portfolio total, then strategic
+          breakdown (Tier 1 / In Pipeline / Avg Engagement). The "Prospects"
+          tile got dropped because all five accounts moved to pipeline on
+          2026-04-25, so the count was always 0 — pure noise on the dashboard. */}
       <div className="grid grid-cols-4 gap-4 mb-8">
+        <StatCard
+          icon={<Layers className="w-5 h-5" style={{ color: '#008CB9' }} />}
+          label="Accounts"
+          value={accounts.length}
+          sub="Named accounts under management"
+        />
         <StatCard
           icon={<Building2 className="w-5 h-5" style={{ color: '#008CB9' }} />}
           label="Tier 1 Accounts"
@@ -55,12 +64,6 @@ export default async function DashboardPage() {
           label="In Pipeline"
           value={accounts.filter(a => a.lifecycle_stage === 'pipeline').length}
           sub="Active opportunities"
-        />
-        <StatCard
-          icon={<Zap className="w-5 h-5" style={{ color: '#008CB9' }} />}
-          label="Prospects"
-          value={accounts.filter(a => a.lifecycle_stage === 'prospect').length}
-          sub="Top of funnel"
         />
         <StatCard
           icon={<Users className="w-5 h-5" style={{ color: '#008CB9' }} />}

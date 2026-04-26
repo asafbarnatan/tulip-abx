@@ -3,6 +3,9 @@
 **Open with this, every time** *(one sentence, then move on)*:
 > **"Tulip ABX is an account-based experience platform for Tulip's GTM motion — marketing, sales, AEs, and CS all work off the same six Claude agents that handle account intel, signals, positioning, plays, LinkedIn campaign content, and contact research."**
 
+**The problem** *(lead with this if Nathan asks "what's this solving?")*:
+> *"Tulip wins six-figure-ACV enterprise accounts with complex buying groups across Marketing, SDRs, AEs, CS, and Renewals — but no shared system holds the account context, so each function delivers a fragmented experience to the same customer."*
+
 ## Setting the room
 - **"15 minutes of demo, then yours — stop me anywhere."**
 - Sections (in order, but Nathan can rewire): **1. Mission Control · 2. Accounts → Bayer · 3. Agents page · 4. Integrations**

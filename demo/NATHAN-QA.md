@@ -24,7 +24,7 @@ Glance, deliver, move on. No hedging, no apologizing.
 *"An early agent invented a customer name — I built zero-fabrication guidelines into every prompt so each agent only cites verified facts."*
 
 **Q8. Show me a moment where the human matters more than the agent.**
-*"Publish to LinkedIn — every campaign saves as a draft, an AE reviews and clicks publish; agents draft, humans decide."*
+*"Publish to LinkedIn — every campaign saves as a draft, someone from the marketing team reviews and clicks publish; agents draft, humans decide."*
 
 **Q9. If I rolled this out at Tulip Monday, how long until an AE sees value?**
 *"First Mission Control open — they see prioritized accounts, a generated brief per account, and three drafted plays with openers, cold-start eliminated."*

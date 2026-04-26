@@ -35,7 +35,7 @@ Glance, deliver, move on. No hedging, no apologizing.
 **Q11. Have you built something like this before?**
 *"Not at this scope — this is the first end-to-end product I've shipped solo, from architecture to content to design to deploy."*
 
-**Q12. Why marketing-heavy and not stakeholder sync? The white space felt like the connective tissue between teams, not another CRM or Jira.**
-*"You're right — the v2 is exactly that connective tissue, with the agents as the per-account memory and CRM, ZoomInfo, LinkedIn as data sources, not destinations."*
+**Q12. Why marketing-heavy and not stakeholder sync?**
+*"The white space felt like the connective tissue between teams, not another CRM or Jira — synchronization in relation to positioning, messaging, plays. Being the same Tulip for different people at the account."*
 
 **When you don't know:** *"Honest answer — I haven't built that yet. Here's how I'd think about it…"* — then move on.

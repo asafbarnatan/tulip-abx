@@ -8,8 +8,8 @@ Glance, deliver, move on. No hedging, no apologizing.
 **Q2. What was the hardest part to build?**
 *"Early on the agents invented customer names and stats, so I tightened the guardrails until zero-fabrication was baked into every prompt."*
 
-**Q3. Could you start at Tulip tomorrow?**
-*"Yes — the platform's ready to deploy; first step is per-user access so every action is traceable to a specific AE, then plug in LinkedIn, ZoomInfo, and Salesforce."*
+**Q3. Could the platform go live at Tulip tomorrow?**
+*"Yes — it's ready to deploy; first step is per-user access so every action is traceable to a specific AE, then plug in LinkedIn, ZoomInfo, and Salesforce."*
 
 **Q4. If you worked at Tulip, what would you want first?**
 *"Interviews with the real users — AEs, sales, marketing, CS — to replace my assumptions with their actual problems."*
@@ -21,12 +21,18 @@ Glance, deliver, move on. No hedging, no apologizing.
 *"About 4-5 days — half setup and the agent pipeline, half content corrections and demo polish."*
 
 **Q7. Show me where an agent broke. What did you do?**
-*"An early agent invented a customer name, so I made each one cite or stay silent and pass its grounded output to the next, which makes the work sharper as the pipeline runs."*
+*"An early agent invented a customer name — I built zero-fabrication guidelines into every prompt so each agent only cites verified facts."*
 
 **Q8. Show me a moment where the human matters more than the agent.**
 *"Publish to LinkedIn — every campaign saves as a draft, an AE reviews and clicks publish; agents draft, humans decide."*
 
 **Q9. If I rolled this out at Tulip Monday, how long until an AE sees value?**
 *"First Mission Control open — they see prioritized accounts, a generated brief per account, and three drafted plays with openers, cold-start eliminated."*
+
+**Q10. What surprised you most while building this?**
+*"How fast Claude Code turns a half-formed idea into working software — the real bottleneck is taste and judgment, not typing."*
+
+**Q11. Have you built something like this before?**
+*"Not at this scope — this is the first end-to-end product I've shipped solo, from architecture to content to design to deploy."*
 
 **When you don't know:** *"Honest answer — I haven't built that yet. Here's how I'd think about it…"* — then move on.

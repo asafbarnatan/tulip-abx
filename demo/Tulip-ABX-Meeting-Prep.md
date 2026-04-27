@@ -1,5 +1,4 @@
 # Tulip ABX — Initial Point of View
-### Discussion with Stephanie Ruiz
 
 ---
 
@@ -117,24 +116,13 @@ The MVP demonstrates the complete ABX motion end-to-end: account intelligence, A
 
 ---
 
-## 60-Second Verbal for the Meeting
+## Open questions
 
-> "The core problem is a continuity gap. Tulip targets high-value enterprise manufacturing accounts — six-figure ACV, complex buying groups, long relationships. Winning and expanding those accounts requires account-based marketing, account-based selling, and account-based customer success to work as one continuous motion. Right now they don't — each function operates from its own context, and the account experiences a different Tulip at every stage.
->
-> What I'm proposing is the Tulip ABX Command Center — a shared operating system for named accounts. It holds the positioning, key messages, persona map, and account-specific commitments, and surfaces them to every team member at the right moment. Marketing, Sales, AEs, CS, and Renewals all work the same account — not separate versions of it.
->
-> I have a set of questions I'd love to work through with you to make sure I'm building for Tulip's actual reality."
-
----
-
-## Questions for Stephanie
-
-1. Did I get the problem right? Natan framed this as a go-to-market challenge — ensuring consistent, account-based marketing across the full customer lifecycle. Is that how you see it internally, or is the bigger pain point the operational handoff between teams?
-2. What is the expected output of this exercise — a strategic document, a Figma prototype, or a functional working MVP?
-3. Who currently owns ABX or ABM at Tulip — is there a dedicated function, or is it distributed across demand gen, field marketing, and sales?
-4. How do AEs currently prepare for a first meeting with a new enterprise account — what information do they typically have, and where does it come from?
-5. How deeply is Salesforce being used for account-level context today — is it mostly pipeline tracking, or does it hold richer account intelligence?
-6. Does Tulip currently use ZoomInfo or LinkedIn Premium for account research and contact enrichment, and how is that data being used in practice?
-7. How large is the named account universe for this platform — roughly how many Tier 1 accounts is Tulip actively running an ABX motion on?
-8. Is the challenge scoped to the pre-sale motion, or does the vision extend through the full lifecycle including CS and expansion?
-9. Does Tulip have a documented messaging framework by vertical or persona, or is messaging currently more ad hoc per AE?
+1. Is the bigger pain point the continuity gap across functions, or the operational handoff between teams?
+2. Who currently owns ABX or ABM at Tulip — is there a dedicated function, or is it distributed across demand gen, field marketing, and sales?
+3. How do AEs currently prepare for a first meeting with a new enterprise account — what information do they typically have, and where does it come from?
+4. How deeply is Salesforce being used for account-level context today — is it mostly pipeline tracking, or does it hold richer account intelligence?
+5. Does Tulip currently use ZoomInfo or LinkedIn Premium for account research and contact enrichment, and how is that data being used in practice?
+6. How large is the named account universe for this platform — roughly how many Tier 1 accounts is Tulip actively running an ABX motion on?
+7. Is the challenge scoped to the pre-sale motion, or does the vision extend through the full lifecycle including CS and expansion?
+8. Does Tulip have a documented messaging framework by vertical or persona, or is messaging currently more ad hoc per AE?

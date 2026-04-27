@@ -46,7 +46,7 @@ The agent's defining constraint: it does not generate ad copy from scratch. It r
 
 ## A real campaign that ran
 
-The Bayer AG April 2026 campaign in `linkedin_campaigns` (id `690308904`) is the first production output from this agent. It ran on Asaf's LinkedIn ad account with a $44 budget. Final numbers (closed 2026-04-25): 46 impressions, 0 clicks, 4 engagements, 8.70% engagement rate. Top-quartile B2B Sponsored Content engagement rate is ≥2%. Numbers update in the platform via CSV import from LinkedIn Campaign Manager.
+A Sponsored Content campaign for Bayer AG was drafted by this agent, reviewed by a human, and published to LinkedIn against a narrow ABM audience — Bayer employees in Germany, English-speaking, in 17 specific senior Quality and Manufacturing IT titles. Performance numbers ingest via CSV import from LinkedIn Campaign Manager; live Marketing API sync activates on Tulip credentials.
 
 ## Implementation
 

@@ -120,9 +120,7 @@ Required environment variables (see `.env.local.example`):
 
 ## Live LinkedIn campaign
 
-A real Sponsored Content campaign — agent-drafted, human-reviewed, published to LinkedIn — closed with **8.70% engagement rate (LinkedIn B2B top-quartile is ≥2%)** on a $44 budget: 46 impressions, 4 engagements, 0 clicks. Targeting was narrow on purpose: Bayer employees in Germany, English-speaking, in 17 specific senior Quality and Manufacturing IT titles — the people who own paper batch records.
-
-Stored in `linkedin_campaigns` as id `690308904`, closed 2026-04-25. Performance numbers ingest via CSV import from LinkedIn Campaign Manager (live Marketing API sync activates on Tulip credentials).
+A real Sponsored Content campaign was drafted by the agent, reviewed by a human, and published to LinkedIn against a narrow ABM audience — Bayer employees in Germany, English-speaking, in 17 specific senior Quality and Manufacturing IT titles. Performance numbers ingest via CSV import from LinkedIn Campaign Manager; live Marketing API sync activates on Tulip credentials.
 
 ---
 

@@ -84,11 +84,8 @@ scripts/               Maintenance + content-quality scripts
   set-linkedin-token.mjs           Wire up LinkedIn API access
   ...                              (per-account brief patch + verification scripts)
 
-demo/                  Demo + handoff docs
-  DEMO_SCRIPT.md
-  CEO-REVIEW-REPORT.md
-  HANDOFF.md
-  CAMPAIGN_RUNBOOK.md
+demo/                  Project context
+  Tulip-ABX-Meeting-Prep.md     Initial point of view + framing
 
 test/                  Vitest suite (currently 23 passing)
 docs/screenshots/      Reference screenshots

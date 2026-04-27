@@ -13,7 +13,7 @@ Every agent shares the same content-quality contract via [`lib/agents/content-ru
 
 | # | Agent | Tagline | Output renders in |
 |---|---|---|---|
-| 1 | [Account Intelligence](01-account-intelligence.md) | The analyst | Account header (firmographics, scores) + Signals tab |
+| 1 | [Account Intelligence](01-account-intelligence.md) | The analyst (web-research enabled) | Account header (firmographics, scores) + Signals tab |
 | 2 | [Contact Research](02-contact-research.md) | The scout | Buying Group tab |
 | 3 | [Positioning](03-positioning.md) | The strategist | Positioning Brief tab |
 | 4 | [Play Orchestrator](04-play-orchestrator.md) | The coordinator | Recommended Plays + Actions tabs |

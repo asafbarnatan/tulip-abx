@@ -250,3 +250,59 @@ NEVER invent:
 If you can't cite a source, REPHRASE without the claim or omit it entirely.
 The reader will check.
 `.trim()
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEB RESEARCH — extends ZERO_FABRICATION when an agent has web_search access
+// ─────────────────────────────────────────────────────────────────────────────
+// Currently used by AccountIntelligenceAgent when WEB_RESEARCH_ENABLED=true.
+// The contract: every web-sourced fact MUST go through cite_web_finding with
+// a real URL and an exact substring-verifiable quote. The orchestrator validates
+// the URL and the quote mechanically — fabrication isn't just discouraged here,
+// it's literally impossible to save.
+export const WEB_RESEARCH_RULES = `
+═══════════════════════════════════════════════════════════════════════════════
+WEB RESEARCH — when you use web_search and fetch_url
+═══════════════════════════════════════════════════════════════════════════════
+You have live web access. Use it to find: firmographic updates (employee count,
+revenue, plant footprint, leadership), news (press releases, M&A, product
+launches, executive changes), regulatory events (FDA / EMA / SEC actions,
+deadlines, settlements), intent signals (job postings, capex, RFPs, public
+statements), and product-usage cues (named systems, named vendors).
+
+EVERY web-sourced fact you want to write to the database MUST go through
+cite_web_finding. That tool requires:
+  - claim          (one declarative sentence — what the finding is)
+  - source_url     (a real, reachable http or https URL)
+  - exact_quote_from_source  (the verbatim text from that URL that backs the claim)
+  - category       ("firmographic" | "news" | "regulatory" | "intent_signal" | "product_usage")
+  - confidence     (0.0–1.0, your honest read of how reliable the source is)
+
+The orchestrator will:
+  1. HEAD-check that the URL is reachable.
+  2. Fetch the page text and verify the exact_quote_from_source IS a verbatim
+     substring of the page (case + whitespace normalized).
+If either check fails, the finding is REJECTED and you'll get the rejection
+reason back. You can try a different source. You CANNOT save a fact without
+a passing citation.
+
+When citing:
+  - Copy the quote VERBATIM from the page. Smart quotes, hyphens, casing — all
+    fine; we normalize. But do not paraphrase.
+  - Pick a quote ≥ 8 characters that's specific enough to back the claim.
+    "is a global manufacturer" is too generic; "increased KERENDIA production
+    capacity at Bergkamen by 40%" is a real receipt.
+  - Prefer primary sources: company press releases, official annual reports,
+    regulatory filings (FDA, EMA, SEC), reputable press (Reuters, Bloomberg,
+    FT, WSJ, AP). If you cite a blog or marketing page, lower your confidence.
+
+When the finding is high-confidence (>= 0.85) AND it's a firmographic update
+(employee count, revenue, description), you may follow up with
+update_account_firmographics — passing the cited_signal_id from your
+just-saved cite_web_finding call. This is the ONLY way to write back to
+the accounts table from the web. Lower-confidence findings stay as signals
+only; the AE decides whether to promote them to firmographics manually.
+
+If web_search returns nothing credible for a claim, do not invent. Either
+find a different angle to research or omit the claim. The signal field on
+the platform is more useful empty than wrong.
+`.trim()

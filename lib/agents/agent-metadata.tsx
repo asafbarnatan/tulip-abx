@@ -52,13 +52,14 @@ export const AGENTS: AgentMeta[] = [
     color: '#008CB9',
     icon: Database,
     description:
-      'I read everything about one account — the firmographics, the buying-group contacts, every signal and every touchpoint logged in the last 30 days — and I write a synthesis that tells you what\'s actually going on. I also update the intent and engagement scores when the evidence supports it, and I write a new signal if I spot a gap (like "no one from Sales has touched VP Quality in 47 days").',
+      'I read everything on file about one account — firmographics, the buying group, every signal, every touchpoint in the last 30 days — and I research the public web for fresh firmographic updates, news, regulatory events, and intent signals. Every web finding I save carries a real source URL and a verbatim quote from that source; the orchestrator validates both before the row hits the database. I update intent + engagement scores when the evidence supports it, and I write a new signal if I spot a gap (like "no one from Sales has touched VP Quality in 47 days").',
     whenToUse: [
-      'You need a one-page situation report on a specific account before a call.',
+      'You need a one-page situation report on a specific account before a call — grounded in fresh public sources.',
       'Intent/engagement scores feel stale and you want them re-scored against fresh data.',
       'You suspect there\'s a silent problem — untouched contacts, missed signal — and want it surfaced.',
+      'Firmographics on file feel out of date and you want a sourced refresh from the public web.',
     ],
-    tools: ['Read account record', 'Read buying group', 'Read recent signals', 'Read recent actions', 'Update scores', 'Write new signal'],
+    tools: ['Read account record', 'Read buying group', 'Read recent signals', 'Read recent actions', 'Web search (live)', 'Fetch URL text', 'Cite web finding (URL + quote validated)', 'Update firmographics (with citation)', 'Update scores', 'Write new signal'],
     outputAppears: 'Account header (firmographics, scores) + Signals tab',
     pipelineRole: 'pipeline',
     pipelineStep: 1,

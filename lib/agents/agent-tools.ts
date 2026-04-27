@@ -8,6 +8,7 @@ import {
 } from '@/lib/positioning-kernel'
 import { getProofPointsForAccount } from '@/lib/proof-points'
 import type { IndustryVertical, Geography, LifecycleStage } from '@/lib/database.types'
+import { validateWebFinding } from './web-validation'
 
 const db = () => getSupabase()
 
@@ -272,3 +273,149 @@ export async function failAgentRun(run_id: string, error_message: string, starte
     completed_at: new Date().toISOString(),
   }).eq('id', run_id)
 }
+
+
+// ── Web research tools (used by AccountIntelligenceAgent when WEB_RESEARCH_ENABLED) ──
+
+// Fetch a URL and return up to 60 KB of plain text. The agent calls this
+// after web_search to read a full page and extract a verbatim quote that
+// will pass cite_web_finding validation. Caps the response so a single
+// huge page can't blow the context window.
+export async function tool_fetch_url(url: string) {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return { ok: false, error: `Malformed URL: ${url}` }
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return { ok: false, error: `Unsupported protocol: ${parsed.protocol}` }
+  }
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 8000)
+  try {
+    const res = await fetch(url, { method: 'GET', signal: controller.signal, redirect: 'follow' })
+    if (res.status < 200 || res.status >= 400) {
+      return { ok: false, error: `HTTP ${res.status} fetching ${url}` }
+    }
+    const ct = (res.headers.get('content-type') ?? '').toLowerCase()
+    if (!ct.includes('text/') && !ct.includes('application/xhtml')) {
+      return { ok: false, error: `Content-type "${ct}" is not text — cannot extract a quote.` }
+    }
+    const html = await res.text()
+    // Strip scripts/styles, then tags, decode entities, normalize whitespace.
+    // The agent reads the result, finds a quote that backs its claim, and
+    // passes that quote to cite_web_finding which re-fetches and validates.
+    const text = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim()
+    const MAX_TEXT_CHARS = 60_000
+    return {
+      ok: true,
+      url,
+      content_type: ct,
+      text: text.slice(0, MAX_TEXT_CHARS),
+      truncated: text.length > MAX_TEXT_CHARS,
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return { ok: false, error: `Fetch failed: ${msg}` }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// Cite a web-sourced finding. The agent calls this with a structured claim,
+// the source URL, and the EXACT quote it pulled from that URL. We validate
+// the URL is reachable AND the quote literally exists in the page text. If
+// validation passes, we write a row to the signals table with the citation
+// embedded in the content + source fields. If validation fails, the call
+// returns an error — the agent can try a different source or skip the claim.
+//
+// Categories:
+//   firmographic   — employee count, revenue, plant footprint, leadership
+//   news           — press release, M&A, product launch, executive change
+//   regulatory     — FDA / EMA / SEC actions, deadlines, settlements
+//   intent_signal  — job postings, capex announcements, RFPs, public statements
+//   product_usage  — quoted statements about systems they use today
+export async function tool_cite_web_finding(
+  account_id: string,
+  claim: string,
+  source_url: string,
+  exact_quote_from_source: string,
+  category: string,
+  confidence: number,
+) {
+  const validation = await validateWebFinding(source_url, exact_quote_from_source)
+  if (!validation.ok) {
+    return { ok: false, error: `Citation rejected: ${validation.reason}`, finding_saved: false }
+  }
+  const signal_type =
+    category === "news" ? "news" :
+    category === "regulatory" ? "news" :
+    category === "intent_signal" ? "intent" :
+    category === "product_usage" ? "product_usage" :
+    "firmographic"
+  // Embed the cited quote in the content field so the UI renders the receipt
+  // alongside the headline. UI parses on " — Source: " to split out the quote.
+  const content = `${claim}\n\nSource quote: "${exact_quote_from_source}"`
+  const { data, error } = await db().from("signals").insert({
+    account_id,
+    signal_type,
+    source: source_url,
+    content,
+    sentiment: "neutral",
+    processed: false,
+  }).select().single()
+  if (error) {
+    return { ok: false, error: `signal write failed: ${error.message}`, finding_saved: false }
+  }
+  return { ok: true, signal_id: data.id, finding_saved: true, validated_url: source_url, confidence }
+}
+
+// Update one or more firmographic fields on the account. Confidence MUST be
+// >= 0.85 and a corresponding cited finding (with a real source URL) MUST
+// have been written first. The agent supplies cited_signal_id from a prior
+// tool_cite_web_finding call as proof.
+const FIRMO_CONFIDENCE_THRESHOLD = 0.85
+
+export async function tool_update_account_firmographics(
+  account_id: string,
+  cited_signal_id: string,
+  confidence: number,
+  patch: { description?: string; employee_count?: number; revenue_estimate?: number },
+) {
+  if (confidence < FIRMO_CONFIDENCE_THRESHOLD) {
+    return { ok: false, error: `Confidence ${confidence} below threshold ${FIRMO_CONFIDENCE_THRESHOLD} — refusing to update firmographics. Write a signal instead.`, applied: false }
+  }
+  const { data: signal } = await db().from("signals").select("id, account_id, source").eq("id", cited_signal_id).single()
+  if (!signal) {
+    return { ok: false, error: `cited_signal_id ${cited_signal_id} not found — every firmographic update must reference a previously-saved web finding.`, applied: false }
+  }
+  if (signal.account_id !== account_id) {
+    return { ok: false, error: `cited_signal_id is for a different account — refusing cross-account write.`, applied: false }
+  }
+  if (!signal.source || !signal.source.startsWith("http")) {
+    return { ok: false, error: `cited signal has no http source URL — refusing to write firmographic update from an unsourced finding.`, applied: false }
+  }
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (typeof patch.description === "string" && patch.description.trim()) update.description = patch.description.trim()
+  if (typeof patch.employee_count === "number" && Number.isFinite(patch.employee_count)) update.employee_count = Math.round(patch.employee_count)
+  if (typeof patch.revenue_estimate === "number" && Number.isFinite(patch.revenue_estimate)) update.revenue_estimate = Math.round(patch.revenue_estimate)
+  if (Object.keys(update).length <= 1) {
+    return { ok: false, error: `patch contained no valid firmographic fields.`, applied: false }
+  }
+  const { error } = await db().from("accounts").update(update).eq("id", account_id)
+  if (error) return { ok: false, error: `accounts update failed: ${error.message}`, applied: false }
+  return { ok: true, applied: true, updated_fields: Object.keys(update).filter(k => k !== "updated_at"), via_signal: cited_signal_id, source_url: signal.source }
+}
+

@@ -22,7 +22,7 @@ Click **Run Pipeline** on Mission Control. Five agents fire sequentially — eac
 
 | # | Agent | What it does | Renders in |
 |---|---|---|---|
-| 1 | [**Account Intelligence**](docs/agents/01-account-intelligence.md) | Reads firmographics, buying group, signals, touchpoints. Writes a synthesis. Updates ICP / intent / engagement scores. | Account header + Signals tab |
+| 1 | [**Account Intelligence**](docs/agents/01-account-intelligence.md) | Reads firmographics, buying group, signals, touchpoints **+ researches the public web for fresh updates with URL + verbatim-quote citation on every fact**. Writes a synthesis. Updates ICP / intent / engagement scores. | Account header + Signals tab |
 | 2 | [**Contact Research**](docs/agents/02-contact-research.md) | Fills the next empty buying-group slot (Champion → Economic Buyer → Technical Evaluator) with a real person, cited from a public source. | Buying Group tab |
 | 3 | [**Positioning**](docs/agents/03-positioning.md) | April Dunford brief — positioning statement, strategic narrative, three pillars, persona messages, proof points, objection handlers. | Positioning Brief tab |
 | 4 | [**Play Orchestrator**](docs/agents/04-play-orchestrator.md) | Drafts the top 3 plays (opener, why-now, rationale, target contact), grounded in the brief. | Recommended Plays + Actions tabs |
@@ -37,6 +37,8 @@ Click **Run Signal Watch** in the Mission Control header. [**Signal Watcher**](d
 ### How content stays accurate
 
 `lib/agents/content-rules.ts` is the single source of truth shared by every agent. Verified Tulip customer roster, banned framings, real Tulip AI feature names, account-name precision rules, zero-fabrication contract — all interpolated into every prompt. When a rule changes, every agent inherits it on the next run.
+
+For web-sourced facts, fabrication is prevented mechanically, not just in the prompt. The Account Intelligence and Contact Research agents are the only two that touch the public web. Every web finding goes through a structured citation tool that records a real `source_url` and an `exact_quote_from_source`; the orchestrator HEAD-checks the URL and verifies the quote is a substring of the page text before the finding is saved. No URL or no verifiable quote = the finding is rejected.
 
 ---
 

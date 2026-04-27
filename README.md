@@ -4,8 +4,6 @@
 
 **Live:** https://tulip-abx.vercel.app
 
-![Six-agent showcase — five run per-account in dependency order, one sweeps the portfolio](docs/screenshots/agents-page.png)
-
 ---
 
 ## The thesis

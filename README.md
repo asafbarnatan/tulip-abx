@@ -4,6 +4,8 @@
 
 **Live:** https://tulip-abx.vercel.app
 
+![Six-agent showcase — five run per-account in dependency order, one sweeps the portfolio](docs/screenshots/agents-page.png)
+
 ---
 
 ## The thesis
@@ -91,10 +93,9 @@ demo/                  Project context
 
 docs/
   agents/              ← One MD per agent: purpose, tools, prompts, output mapping
-  screenshots/
+  screenshots/         Reference screenshots
 
 test/                  Vitest suite (currently 23 passing)
-docs/screenshots/      Reference screenshots
 ```
 
 ---
@@ -105,7 +106,7 @@ docs/screenshots/      Reference screenshots
 git clone https://github.com/asafbarnatan/tulip-abx
 cd tulip-abx
 npm install
-cp .env.local.example .env.local   # fill in Supabase + Anthropic + LinkedIn keys
+cp .env.local.example .env.local   # fill in Supabase + Anthropic keys (LinkedIn optional)
 npm run dev                         # → http://localhost:3000
 npm run typecheck                   # tsc --noEmit
 npm test                            # vitest (23 tests)
@@ -121,7 +122,9 @@ Required environment variables (see `.env.local.example`):
 
 ## Live LinkedIn campaign
 
-The Bayer AG April 2026 LinkedIn campaign in `linkedin_campaigns` (id `690308904`) is a real campaign that ran on Asaf's LinkedIn ad account. Closed 2026-04-25 with the full $44 budget consumed: 46 impressions, 0 clicks, 4 engagements, 8.70% engagement rate. Numbers update via CSV import from LinkedIn Campaign Manager.
+A real Sponsored Content campaign — agent-drafted, human-reviewed, published to LinkedIn — closed with **8.70% engagement rate (LinkedIn B2B top-quartile is ≥2%)** on a $44 budget: 46 impressions, 4 engagements, 0 clicks. Targeting was narrow on purpose: Bayer employees in Germany, English-speaking, in 17 specific senior Quality and Manufacturing IT titles — the people who own paper batch records.
+
+Stored in `linkedin_campaigns` as id `690308904`, closed 2026-04-25. Performance numbers ingest via CSV import from LinkedIn Campaign Manager (live Marketing API sync activates on Tulip credentials).
 
 ---
 

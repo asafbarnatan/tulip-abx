@@ -22,15 +22,17 @@ Click **Run Pipeline** on Mission Control. Five agents fire sequentially — eac
 
 | # | Agent | What it does | Renders in |
 |---|---|---|---|
-| 1 | **Account Intelligence** | Reads firmographics, buying group, signals, touchpoints. Writes a synthesis. Updates ICP / intent / engagement scores. | Account header + Signals tab |
-| 2 | **Contact Research** | Fills the next empty buying-group slot (Champion → Economic Buyer → Technical Evaluator) with a real person, cited from a public source. | Buying Group tab |
-| 3 | **Positioning** | April Dunford brief — positioning statement, strategic narrative, three pillars, persona messages, proof points, objection handlers. | Positioning Brief tab |
-| 4 | **Play Orchestrator** | Drafts the top 3 plays (opener, why-now, rationale, target contact), grounded in the brief. | Recommended Plays + Actions tabs |
-| 5 | **LinkedIn Campaign** | Drafts headline + ad copy anchored in the approved brief. Saves as a draft in LinkedIn Campaign Manager. Never auto-launches. | Campaigns tab + Mission Control LinkedIn panel |
+| 1 | [**Account Intelligence**](docs/agents/01-account-intelligence.md) | Reads firmographics, buying group, signals, touchpoints. Writes a synthesis. Updates ICP / intent / engagement scores. | Account header + Signals tab |
+| 2 | [**Contact Research**](docs/agents/02-contact-research.md) | Fills the next empty buying-group slot (Champion → Economic Buyer → Technical Evaluator) with a real person, cited from a public source. | Buying Group tab |
+| 3 | [**Positioning**](docs/agents/03-positioning.md) | April Dunford brief — positioning statement, strategic narrative, three pillars, persona messages, proof points, objection handlers. | Positioning Brief tab |
+| 4 | [**Play Orchestrator**](docs/agents/04-play-orchestrator.md) | Drafts the top 3 plays (opener, why-now, rationale, target contact), grounded in the brief. | Recommended Plays + Actions tabs |
+| 5 | [**LinkedIn Campaign**](docs/agents/05-linkedin-campaign.md) | Drafts headline + ad copy anchored in the approved brief. Saves as a draft in LinkedIn Campaign Manager. Never auto-launches. | Campaigns tab + Mission Control LinkedIn panel |
 
 ### Portfolio Sweep (1 agent, runs separately)
 
-Click **Run Signal Watch** in the Mission Control header. **Signal Watcher** sweeps all 5 accounts in one pass, ranks them critical / high / medium / low by urgency, updates intent scores, marks signals processed. Output: Mission Control Account Pulse + intent scores.
+Click **Run Signal Watch** in the Mission Control header. [**Signal Watcher**](docs/agents/06-signal-watcher.md) sweeps all 5 accounts in one pass, ranks them critical / high / medium / low by urgency, updates intent scores, marks signals processed. Output: Mission Control Account Pulse + intent scores.
+
+> **Detailed agent docs:** [`docs/agents/`](docs/agents/) — one MD per agent with purpose, tools, prompts, and where each output lands.
 
 ### How content stays accurate
 
@@ -86,6 +88,10 @@ scripts/               Maintenance + content-quality scripts
 
 demo/                  Project context
   Tulip-ABX-Meeting-Prep.md     Initial point of view + framing
+
+docs/
+  agents/              ← One MD per agent: purpose, tools, prompts, output mapping
+  screenshots/
 
 test/                  Vitest suite (currently 23 passing)
 docs/screenshots/      Reference screenshots

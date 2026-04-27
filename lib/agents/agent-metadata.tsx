@@ -54,7 +54,7 @@ export const AGENTS: AgentMeta[] = [
     description:
       'I read everything on file about one account — firmographics, the buying group, every signal, every touchpoint in the last 30 days — and I research the public web to fill in fresh firmographic updates, news, regulatory events, and intent signals. Every web-sourced fact is saved with a cited URL and a verbatim quote from the page, both validated automatically. I update intent + engagement scores when the evidence supports it, and I flag silent gaps like "no one from Sales has touched VP Quality in 47 days."',
     whenToUse: [
-      'You need a one-page situation report on a specific account before a call — grounded in fresh public sources.',
+      'You want a fresh batch of cited signals — news, regulatory events, intent signals — to land on the Signals tab.',
       'Intent/engagement scores feel stale and you want them re-scored against fresh data.',
       'You suspect there\'s a silent problem — untouched contacts, missed signal — and want it surfaced.',
       'Firmographics on file feel out of date and you want a sourced refresh from the public web.',
@@ -110,7 +110,7 @@ export const AGENTS: AgentMeta[] = [
     color: '#22c55e',
     icon: Layers,
     description:
-      'I pick 3 to 5 sales plays from the Tulip play library that fit this account\'s stage and vertical, personalize the opener copy for named contacts in the buying group, and save each play as a draft action with a clear why-now, target, opener, and rationale. I don\'t execute anything — a human on your team picks up each draft and runs it.',
+      'I pick the top 3 sales plays from the Tulip play library that fit this account\'s stage and vertical, personalize the opener copy for named contacts in the buying group, and save each play as a draft action with a clear why-now, target, opener, and rationale. I don\'t execute anything — a human on your team picks up each draft and runs it.',
     whenToUse: [
       'You just finished a brief and want a prioritized list of concrete next moves.',
       'An SDR needs openers ready to personalize before the day starts.',

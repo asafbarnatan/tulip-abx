@@ -8,7 +8,7 @@ A positioning brief without concrete next moves is a slide deck nobody acts on. 
 
 ## What it does
 
-> *"I pick 3 to 5 sales plays from the Tulip play library that fit this account's stage and vertical, personalize the opener copy for named contacts in the buying group, and save each play as a draft action with a clear why-now, target, opener, and rationale. I don't execute anything — a human on your team picks up each draft and runs it."*
+> *"I pick the top 3 sales plays from the Tulip play library that fit this account's stage and vertical, personalize the opener copy for named contacts in the buying group, and save each play as a draft action with a clear why-now, target, opener, and rationale. I don't execute anything — a human on your team picks up each draft and runs it."*
 
 ## When to use it
 

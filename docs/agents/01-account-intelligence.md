@@ -12,7 +12,7 @@ Every other agent in the pipeline depends on a coherent read of the account. Acc
 
 ## When to use it
 
-- You need a one-page situation report on a specific account before a call — grounded in fresh public sources.
+- You want a fresh batch of cited signals — news, regulatory events, intent signals — to land on the Signals tab.
 - Intent / engagement scores feel stale and you want them re-scored against fresh data.
 - You suspect there's a silent problem — untouched contacts, missed signal — and want it surfaced.
 - Firmographics on file feel out of date and you want a sourced refresh from the public web.

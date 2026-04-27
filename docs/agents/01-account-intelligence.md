@@ -47,7 +47,7 @@ For `update_account_firmographics`, three additional checks run server-side: the
 ## Where the output appears
 
 - **Account detail header** — firmographics tile + score circles.
-- **Signals tab** — every cited finding renders as a signal card with the URL and the verbatim quote inline as a "Source quote: …" subline.
+- **Signals tab** — every cited finding renders as a clean signal card: the **claim as the headline**, a **"via {domain}"** tag (e.g. *via reuters.com*), and a **"↗ Source"** badge that opens the citation URL. The verbatim quote is used for validation only — it never pollutes the UI. PositioningAgent reads these signals to ground the brief, but the brief itself stays free of raw URLs and source-reference text.
 
 ## In the pipeline
 

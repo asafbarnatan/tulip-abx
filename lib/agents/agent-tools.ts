@@ -365,13 +365,22 @@ export async function tool_cite_web_finding(
     category === "intent_signal" ? "intent" :
     category === "product_usage" ? "product_usage" :
     "firmographic"
-  // Embed the cited quote in the content field so the UI renders the receipt
-  // alongside the headline. UI parses on " — Source: " to split out the quote.
-  const content = `${claim}\n\nSource quote: "${exact_quote_from_source}"`
+  // The signals table renders three columns in the UI:
+  //   - source       → human-readable label, shown as "via {source}". Use the
+  //                    domain for clean display (e.g. "reuters.com").
+  //   - source_url   → full URL, shown as the "↗ Source" badge link.
+  //   - content      → the claim, ONE complete sentence. No embedded quote
+  //                    text — the quote was only for validation. Keeping the
+  //                    content clean keeps the Signals tab readable AND keeps
+  //                    PositioningAgent from picking up source-reference noise.
+  let displaySource = source_url
+  try { displaySource = new URL(source_url).hostname.replace(/^www\./, '') } catch { /* keep raw URL on parse failure */ }
+  const content = claim.trim()
   const { data, error } = await db().from("signals").insert({
     account_id,
     signal_type,
-    source: source_url,
+    source: displaySource,
+    source_url,
     content,
     sentiment: "neutral",
     processed: false,

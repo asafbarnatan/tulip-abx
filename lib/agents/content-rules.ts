@@ -271,11 +271,25 @@ statements), and product-usage cues (named systems, named vendors).
 
 EVERY web-sourced fact you want to write to the database MUST go through
 cite_web_finding. That tool requires:
-  - claim          (one declarative sentence — what the finding is)
-  - source_url     (a real, reachable http or https URL)
-  - exact_quote_from_source  (the verbatim text from that URL that backs the claim)
+  - claim          (ONE complete declarative sentence, 8-22 words. This is
+                    what renders on the Signals tab. Keep it tight — the
+                    receipt URL is already shown next to it as a "↗ Source"
+                    badge. Do NOT paste the quote into the claim.)
+  - source_url     (a real, reachable http or https URL — extracted from
+                    the page hostname, this becomes the "via {domain}" tag)
+  - exact_quote_from_source  (the verbatim text from that URL that backs
+                    the claim. Used for validation only — NOT displayed
+                    anywhere in the UI. The validator checks this quote
+                    is a literal substring of the page text. Keep it
+                    long enough to be specific, ≥ 8 chars.)
   - category       ("firmographic" | "news" | "regulatory" | "intent_signal" | "product_usage")
   - confidence     (0.0–1.0, your honest read of how reliable the source is)
+
+Important UI implication: the Signals tab will render each finding as a
+clean card with the claim as the headline + a "via {domain}" tag + a
+"↗ Source" link. NO raw URLs or quote text in the visible content. If
+your claim is multi-sentence or contains "Source: ..." or "Quote: ...",
+the UI will look messy. Keep claim to one sentence.
 
 The orchestrator will:
   1. HEAD-check that the URL is reachable.

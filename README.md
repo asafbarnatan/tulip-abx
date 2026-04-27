@@ -4,8 +4,6 @@
 
 **Live:** https://tulip-abx.vercel.app
 
-![Mission Control](docs/screenshots/mission-control.png)
-
 ---
 
 ## The thesis
